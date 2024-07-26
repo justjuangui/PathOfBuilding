@@ -63,6 +63,7 @@ local ItemsTabClass = newClass("ItemsTab", "UndoHandler", "ControlHost", "Contro
 
 	-- PoB Trader class initialization
 	self.tradeQuery = new("TradeQuery", self)
+	self.tradeGenerator = new("TradeGenerator")
 
 	-- Set selector
 	self.controls.setSelect = new("DropDownControl", {"TOPLEFT",self,"TOPLEFT"}, 96, 8, 216, 20, nil, function(index, value)
@@ -299,6 +300,24 @@ holding Shift will put it in the second.]])
 	self.controls.removeDisplayItem = new("ButtonControl", {"LEFT",self.controls.editDisplayItem,"RIGHT"}, 8, 0, 60, 20, "Cancel", function()
 		self:SetDisplayItem()
 	end)
+
+	self.controls.openTradeSearch = new("ButtonControl", {"LEFT",self.controls.removeDisplayItem,"RIGHT"}, 8, 0, 140, 20, "Open Trade Link", function()
+		if self.displayItem then
+			if IsKeyDown("CTRL") then
+				self.tradeGenerator:GenerateExactMatchTradeLink(self.displayItem)
+			else
+				self.tradeGenerator:GeneratePopupItemSettings(function(excludeRuleList)
+					self.tradeGenerator:GenerateExactMatchTradeLink(self.displayItem, excludeRuleList)
+				end)
+			end
+		end
+	end)
+
+	self.controls.openTradeSearch.tooltipFunc = function(tooltip)
+		tooltip:Clear()
+		tooltip:AddLine(16, "^7Click if you want to open exact customize trade search in browser")
+		tooltip:AddLine(16, "^7Press Ctrl + Click if you want to open exact match trade in browser")
+	end
 
 	-- Section: Variant(s)
 

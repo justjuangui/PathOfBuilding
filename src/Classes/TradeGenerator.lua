@@ -34,7 +34,16 @@ local function parseLineTrade(mod, whereDefault)
 	if not whereDefault then whereDefault = "explicit" end
 
 	local where = whereDefault ~= "enchant" and ((mod.fractured and "fractured") or (mod.crafted and "crafted")) or whereDefault
-	modTag, line, tagCap = scanTrade(mod.line, data.tradeInfo.Stats[where], nil)
+
+	local modLine = mod.line
+
+	-- handle custom craft with range
+	if mod.crafted then
+		modLine = modLine:gsub("[+-]?%(%d+%-%d+%)", function (k, val)
+			return mod.modList and #mod.modList > 0 and mod.modList[1].value or val
+		end)
+	end
+	modTag, line, tagCap = scanTrade(modLine, data.tradeInfo.Stats[where], nil)
 	if type(modTag) == "function" then
 		modTag = modTag(unpack(tagCap))
 	elseif type(modTag) == "string" then

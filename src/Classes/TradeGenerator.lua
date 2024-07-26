@@ -76,8 +76,9 @@ function BaseMapperClass:GenerateModTradeBasic()
 	modsTrade:NewMod("TypeFilter")
 	modsTrade:NewMod("WeaponFilter")
 	modsTrade:NewMod("ArmourFilter")
+	modsTrade:NewMod("SocketFilter")
 	modsTrade:NewMod("MiscFilter")
-	modsTrade:NewMod("StatsFilter")
+	modsTrade:NewMod("StatsFilter")	
 	return modsTrade
 end
 
@@ -156,6 +157,27 @@ function TradeGeneratorClass:GenerateExactMatchTradeLink(testItem, excludeRuleLi
 			if index == 1 then goto continue end -- Skip the first name, as it is the name of the item
 
 			search.query.filters.misc_filters.filters[mod.type] = mod.value
+			::continue::
+		end
+	end
+
+	local modSocket = modTrade.mods['SocketFilter']
+
+	if #modSocket > 1 then
+		if not search.query.filters then
+			search.query.filters = {}
+		end
+		if not search.query.filters.socket_filters then
+			search.query.filters.socket_filters = {}
+		end
+		if not search.query.filters.socket_filters.filters then
+			search.query.filters.socket_filters.filters = {}
+		end
+
+		for index, mod in ipairs(modSocket) do
+			if index == 1 then goto continue end -- Skip the first name, as it is the name of the item
+
+			search.query.filters.socket_filters.filters[mod.type] = mod.value
 			::continue::
 		end
 	end

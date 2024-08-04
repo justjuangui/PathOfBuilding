@@ -43,6 +43,11 @@ local function parseLineTrade(mod, whereDefault)
 			return mod.modList and #mod.modList > 0 and mod.modList[1].value or val
 		end)
 	end
+
+	-- validate if have any info in StatDescriber
+	-- handle special case like reduce, an additional arrows, etc
+	--data.describeStats(modLine, "stat_descriptions")
+
 	modTag, line, tagCap = scanTrade(modLine, data.tradeInfo.Stats[where], nil)
 	if type(modTag) == "function" then
 		modTag = modTag(unpack(tagCap))

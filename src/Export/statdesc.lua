@@ -315,3 +315,7 @@ function describeMod(mod)
 	out.modTags = describeModTags(mod.ImplicitTags)
 	return out, orders
 end
+
+function getInfoByStatId(statId)
+	return statDescriptor and statDescriptor[statId] or nil
+end

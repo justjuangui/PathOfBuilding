@@ -14,7 +14,7 @@ local function printScopeInfo(text)
 	print(string.rep("=", 10))
 end
 local function cleanAndFormatString(str)
-	return str:gsub('"', '\\"'):gsub("\n", "\\n"):gsub("%%", "%%%%"):lower()
+	return str:gsub('"', '\\"'):gsub("\n", "\\n"):gsub("%%", "%%%%"):gsub("%(", "%%("):gsub("%)", "%%)"):lower()
 end
 
 local function generateFunctionParseWithValues(out, outPrefix, entryText, modTradeId, negate, defaultValue) 

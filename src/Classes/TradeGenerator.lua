@@ -30,12 +30,12 @@ local function scanTrade(line, patternList, plain)
 	end
 end
 
-local function parseLineTrade(mod, whereDefault)
+local function parseLineTrade(mod, whereDefault, isLocal)
 	if not whereDefault then whereDefault = "explicit" end
-
+	
 	local where = whereDefault ~= "enchant" and ((mod.fractured and "fractured") or (mod.crafted and "crafted")) or whereDefault
 
-	local modLine = mod.line
+	local modLine = mod.line .. (isLocal and " (local)" or "") -- add local tag to line
 
 	-- handle custom craft with range
 	if mod.crafted then

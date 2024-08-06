@@ -122,14 +122,18 @@ end
 
 local TradeGeneratorClass = newClass("TradeGenerator", function(self)
 	self.itemMapper = new("TradeBaseMapper", "Data/TradeMapper/Items")
+	self.gemMapper = new("TradeBaseMapper", "Data/TradeMapper/Gems")
 	
 end)
-function TradeGeneratorClass:GenerateExactMatchTradeLink(testItem, excludeRuleList)
-	if launch.devMode then
+function TradeGeneratorClass:GenerateExactMatchTradeLink(ObjectToMap, excludeRuleList, type)
+	if launch.devMode then		
 		self.itemMapper = new("TradeBaseMapper", "Data/TradeMapper/Items")
+		self.gemMapper = new("TradeBaseMapper", "Data/TradeMapper/Gems")
 	end
 
-	local modTrade = self.itemMapper:Execute(testItem, excludeRuleList)
+	local mapper = type == "gems" and self.gemMapper or self.itemMapper
+
+	local modTrade = mapper:Execute(ObjectToMap, excludeRuleList)
 
 	local search = {
 		query = {
@@ -231,14 +235,15 @@ function TradeGeneratorClass:GenerateExactMatchTradeLink(testItem, excludeRuleLi
 	end)))
 end
 
-function TradeGeneratorClass:GeneratePopupItemSettings(callback)
+function TradeGeneratorClass:GeneratePopupItemSettings(callback, type)
 	local controls = {}
 	local excludeRuleList = {}
 	local previousItem = nil
 	local height = 30
 	local width = 300
+	local mapper = type == "gems" and self.gemMapper or self.itemMapper
 
-	for _, rule in ipairs(self.itemMapper:GetRules()) do
+	for _, rule in ipairs(mapper:GetRules()) do
 		local anchor = (previousItem and {"TOPRIGHT", previousItem, "BOTTOMRIGHT"}) or nil
 		local xPos = not previousItem and 20 or 0
 		local yPos = not previousItem and height or 2

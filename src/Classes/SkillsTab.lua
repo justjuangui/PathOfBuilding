@@ -91,6 +91,7 @@ local SkillsTabClass = newClass("SkillsTab", "UndoHandler", "ControlHost", "Cont
 	self.showAltQualityGems = false
 	self.defaultGemLevel = "normalMaximum"
 	self.defaultGemQuality = main.defaultGemQuality
+	self.tradeGenerator = new("TradeGenerator")
 
 	-- Set selector
 	self.controls.setSelect = new("DropDownControl", { "TOPLEFT", self, "TOPLEFT" }, 76, 8, 210, 20, nil, function(index, value)
@@ -887,8 +888,28 @@ function SkillsTabClass:CreateGemSlot(index)
 	end
 	self.controls["gemSlot"..index.."Enable"] = slot.enabled
 
+	-- trade button
+	slot.trade = new("ButtonControl", {"LEFT",slot.enabled,"RIGHT"}, 18, 0, 60, 20, "Trade", function()
+		local gemInstance = self.displayGroup.gemList[index]
+		if gemInstance then
+			if IsKeyDown("CTRL") then
+				self.tradeGenerator:GenerateExactMatchTradeLink(gemInstance, nil, "gems")
+			else
+				self.tradeGenerator:GeneratePopupItemSettings(function(excludeRuleList)
+					self.tradeGenerator:GenerateExactMatchTradeLink(gemInstance, excludeRuleList, "gems")
+				end, "gems")
+			end
+		end
+	end)
+	slot.trade.tooltipFunc = function(tooltip)
+		tooltip:Clear()
+		tooltip:AddLine(16, "^7Click if you want to open exact customize trade search in browser")
+		tooltip:AddLine(16, "^7Press Ctrl + Click if you want to open exact match trade in browser")
+	end
+	self.controls["gemSlot"..index.."Trade"] = slot.trade
+
 	-- Count gem
-	slot.count = new("EditControl", {"LEFT",slot.enabled,"RIGHT"}, 18, 0, 60, 20, nil, nil, "%D", 2, function(buf)
+	slot.count = new("EditControl", {"LEFT",slot.trade,"RIGHT"}, 18, 0, 60, 20, nil, nil, "%D", 2, function(buf)
 		local gemInstance = self.displayGroup.gemList[index]
 		if not gemInstance then
 			gemInstance = { nameSpec = "", level = self.defaultGemLevel or 20, quality = self.defaultGemQuality or 0, qualityId = "Default", enabled = true, enableGlobal1 = true, count = 1, new = true }

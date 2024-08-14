@@ -4110,7 +4110,7 @@ skills["FleshAndStone"] = {
 			mod("PhysicalDamageTaken", "MORE", nil, ModFlag.Hit, 0, { type = "GlobalEffect", effectType = "AuraDebuff", effectCond = "BloodStance" }),
 		},
 		["flesh_stone_sand_stance_damage_taken_+%_final_from_distance_from_enemy_hits"] = {
-			mod("DamageTaken", "MORE", nil, 0, 0, { type = "GlobalEffect", effectType = "Buff", effectCond = "SandStance" }),
+			mod("DamageTakenWhenHit", "MORE", nil, 0, 0, { type = "GlobalEffect", effectType = "Buff", effectCond = "SandStance" }),
 		},
 	},
 	baseFlags = {
@@ -10897,7 +10897,7 @@ skills["VengefulCry"] = {
 	name = "Vengeful Cry",
 	baseTypeName = "Vengeful Cry",
 	color = 1,
-	description = "Retaliate against a savage hit with a warcry, taunting all nearby enemies to attack the user. The user and nearby allies gain a buff which grants rage and prevents rage from being lost.",
+	description = "Retaliate against a savage hit with a warcry, taunting all nearby enemies to attack the user. The user and nearby allies gain a buff which grants rage and prevents rage from being lost. Minions cannot gain rage.",
 	skillTypes = { [SkillType.Buff] = true, [SkillType.Area] = true, [SkillType.Duration] = true, [SkillType.Warcry] = true, [SkillType.Cooldown] = true, [SkillType.Retaliation] = true, },
 	statDescriptionScope = "skill_stat_descriptions",
 	castTime = 0.8,
@@ -10905,6 +10905,7 @@ skills["VengefulCry"] = {
 		["rage_warcry_gain_X_rage_per_minute_per_5_monster_power_max_25_power"] = {
 			mod("RageRegen", "BASE", nil, 0, 0, { type = "GlobalEffect", effectType = "Warcry", div = 5, limit = 25 }),
 			flag("Condition:CanGainRage", { type = "GlobalEffect", effectType = "Warcry"} ),
+			flag("InherentRageLossIsPrevented", { type = "GlobalEffect", effectType = "Warcry"} ),
 			div = 60,
 		},
 		["rage_warcry_maximum_rage_+"] = {

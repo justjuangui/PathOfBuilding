@@ -1108,6 +1108,27 @@ function calcs.offence(env, actor, activeSkill)
 			breakdown.CurseEffectMod = breakdown.mod(skillModList, skillCfg, "CurseEffect")
 		end
 	end
+	if activeSkill.skillTypes[SkillType.Warcry] then
+		local full_duration = calcSkillDuration(skillModList, skillCfg, activeSkill.skillData, env, enemyDB)
+		local cooldownOverride = skillModList:Override(skillCfg, "CooldownRecovery")
+		local actual_cooldown = cooldownOverride or (activeSkill.skillData.cooldown  + skillModList:Sum("BASE", skillCfg, "CooldownRecovery")) / calcLib.mod(skillModList, skillCfg, "CooldownRecovery")
+		local uptime = env.modDB:Flag(nil, "Condition:WarcryMaxHit") and 1 or m_min(full_duration / actual_cooldown, 1)
+		local unscaledEffect = calcLib.mod(skillModList, skillCfg, "WarcryEffect", "BuffEffect")
+		output.WarcryEffectMod = unscaledEffect * uptime
+		if breakdown then
+			breakdown.WarcryEffectMod = {
+					s_format("%.2f ^8(effect modifiers)", unscaledEffect)
+			}
+			if env.modDB:Flag(nil, "Condition:WarcryMaxHit") or uptime ~= 1 then
+				if env.modDB:Flag(nil, "Condition:WarcryMaxHit") then
+					t_insert(breakdown.WarcryEffectMod, "* 100% uptime (WarcryMaxHit Override)")
+				elseif uptime ~= 1 then
+					t_insert(breakdown.WarcryEffectMod, s_format("* %.2f%% ^8(uptime)", uptime * 100))
+				end
+				t_insert(breakdown.WarcryEffectMod, s_format("= %.1f%%", output.WarcryEffectMod * 100))
+			end
+		end
+	end
 	if activeSkill.skillTypes[SkillType.Link] then
 		output.LinkEffectMod = calcLib.mod(skillModList, skillCfg, "LinkEffect", "BuffEffect")
 		if breakdown then
@@ -1601,9 +1622,10 @@ function calcs.offence(env, actor, activeSkill)
 				end
 			elseif val.type == "Rage" then
 				if skillModList:Flag(skillCfg, "CostRageInsteadOfSouls") then -- Hateforge
-					val.baseCost = val.baseCost + costs.Soul.baseCost
+					val.baseCost = costs.Soul.baseCost
 					val.baseCostNoMult = val.baseCostNoMult + costs.Soul.baseCostNoMult
-					val.finalBaseCost = val.finalBaseCost + costs.Soul.finalBaseCost
+					val.finalBaseCost = costs.Soul.baseCost
+					mult = 1
 					costs.Soul.baseCost = 0
 					costs.Soul.baseCostNoMult = 0
 					costs.Soul.finalBaseCost = 0
@@ -2551,7 +2573,7 @@ function calcs.offence(env, actor, activeSkill)
 					end
 					t_insert(globalBreakdown.ExertedAttackUptimeRatio, s_format("= %d%%", globalOutput.ExertedAttackUptimeRatio))
 				end
-				if globalOutput.ExertedAttackUptimeRatio > 0 then
+				if globalOutput.ExertedAttackUptimeRatio > 0 and not globalOutput.ExertedAttackUptimeRatioCalculated then
 					local incExertedAttacks = skillModList:Sum("INC", cfg, "ExertIncrease")
 					local moreExertedAttacks = skillModList:Sum("MORE", cfg, "ExertIncrease")
 					local moreExertedAttackDamage = skillModList:Sum("MORE", cfg, "ExertAttackIncrease")
@@ -2581,6 +2603,7 @@ function calcs.offence(env, actor, activeSkill)
 							s_format("= %.2f", globalOutput.ExertedAttackHitEffect),
 						}
 					end
+					globalOutput.ExertedAttackUptimeRatioCalculated = true
 				end
 			end
 		end

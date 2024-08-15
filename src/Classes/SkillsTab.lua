@@ -903,7 +903,7 @@ function SkillsTabClass:CreateGemSlot(index)
 	end)
 	slot.trade.tooltipFunc = function(tooltip)
 		tooltip:Clear()
-		tooltip:AddLine(16, "^7Click if you want to open gems trade rules")
+		tooltip:AddLine(16, "^7Click if you want to open gem trade rules")
 		tooltip:AddLine(16, "^7Press Ctrl + Click if you want to open exact match trade in browser")
 	end
 	self.controls["gemSlot"..index.."Trade"] = slot.trade

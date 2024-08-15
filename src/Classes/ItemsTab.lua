@@ -315,7 +315,7 @@ holding Shift will put it in the second.]])
 
 	self.controls.openTradeSearch.tooltipFunc = function(tooltip)
 		tooltip:Clear()
-		tooltip:AddLine(16, "^7Click if you want to open items trade rules")
+		tooltip:AddLine(16, "^7Click if you want to open item trade rules")
 		tooltip:AddLine(16, "^7Press Ctrl + Click if you want to open exact match trade in browser")
 	end
 

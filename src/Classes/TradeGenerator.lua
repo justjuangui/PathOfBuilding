@@ -131,7 +131,15 @@ function TradeGeneratorClass:GenerateExactMatchTradeLink(ObjectToMap, excludeRul
 		self.gemMapper = new("TradeBaseMapper", "Data/TradeMapper/Gems")
 	end
 
+	type = type or "items"
 	local mapper = type == "gems" and self.gemMapper or self.itemMapper
+
+	if not excludeRuleList then
+		excludeRuleList = {}
+		main.tradeSearchRules[type]:gsub("([^;]+)", function(ruleName)
+			excludeRuleList[ruleName] = true
+		end)
+	end	
 
 	local modTrade = mapper:Execute(ObjectToMap, excludeRuleList)
 
@@ -241,15 +249,25 @@ function TradeGeneratorClass:GeneratePopupItemSettings(callback, type)
 	local previousItem = nil
 	local height = 30
 	local width = 300
+	type = type or "items"
 	local mapper = type == "gems" and self.gemMapper or self.itemMapper
+	local title = type == "gems" and "Gem trade rules" or "Item trade rules"
+	
+	main.tradeSearchRules[type]:gsub("([^;]+)", function(ruleName)
+		excludeRuleList[ruleName] = true
+	end)
 
 	for _, rule in ipairs(mapper:GetRules()) do
 		local anchor = (previousItem and {"TOPRIGHT", previousItem, "BOTTOMRIGHT"}) or nil
 		local xPos = not previousItem and 20 or 0
 		local yPos = not previousItem and height or 2
+		local initialState = true
+		if excludeRuleList[rule.id] then
+			initialState = false
+		end
 		controls[rule.id] = new("CheckBoxControl", anchor, xPos, yPos, 18, rule.name, function(state)
 			excludeRuleList[rule.id] = not state or nil
-		end, nil, true)
+		end, nil, initialState)
 		previousItem = controls[rule.id]
 		height = height + 20
 	end
@@ -263,7 +281,18 @@ function TradeGeneratorClass:GeneratePopupItemSettings(callback, type)
 	controls.close = new("ButtonControl", {"TOPLEFT", controls.generate, "TOPRIGHT"}, 6, 0, 120, 20, "Cancel", function()
 		main:ClosePopup()
 	end)
+
+	height = height + 20
+	controls.save = new ("ButtonControl", {"TOPLEFT", controls.generate, "BOTTOMLEFT"}, 0, 4, 120+120+6, 20, "Save my preferences", function()
+		local stringExcludeRules = ""
+		for ruleName, _ in pairs(excludeRuleList) do
+			stringExcludeRules = stringExcludeRules .. ruleName .. ";"
+		end
+		main.tradeSearchRules[type] = stringExcludeRules
+		main:SaveSettings()
+		main:ClosePopup()
+	end)
 	
 	height = height + 38
-	main:OpenPopup(300, height, "Item trade rules", controls, nil, nil, "close", nil, nil)
+	main:OpenPopup(300, height, title, controls, nil, nil, "close", nil, nil)
 end

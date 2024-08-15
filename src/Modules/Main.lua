@@ -55,6 +55,12 @@ function main:Init()
 	self.sharedItemSetList = { }
 	self.gameAccounts = { }
 
+	-- default tradeSearchRules
+	self.tradeSearchRules = {
+		items = "SOCKETSSLOTS;SOCKETSLINKS;", -- exclude links and sockes by default
+		gems = "QUALITY" -- exclude quality by default
+	}
+
 	local ignoreBuild
 	if arg[1] then
 		local importLink = buildSites.ParseImportLinkFromURI(arg[1])
@@ -617,6 +623,11 @@ function main:LoadSettings(ignoreBuild)
 				if node.attrib.showPublicBuilds then
 					self.showPublicBuilds = node.attrib.showPublicBuilds == "true"
 				end
+			elseif node.elem == "TradeSearchRules" then
+				self.tradeSearchRules = {}
+				for name, value  in pairs(node.attrib) do
+					self.tradeSearchRules[name] = value
+				end
 			end
 		end
 	end
@@ -723,6 +734,14 @@ function main:SaveSettings()
 		disableDevAutoSave = tostring(self.disableDevAutoSave),
 		showPublicBuilds = tostring(self.showPublicBuilds)
 	} })
+
+	-- Save trade search rules
+	local tradeSearchRules = { elem = "TradeSearchRules", attrib = {} }
+	for type, value in pairs(self.tradeSearchRules) do
+		tradeSearchRules.attrib[type] = value
+	end
+	t_insert(setXML, tradeSearchRules)
+
 	local res, errMsg = common.xml.SaveXMLFile(setXML, self.userPath.."Settings.xml")
 	if not res then
 		launch:ShowErrMsg("Error saving 'Settings.xml': %s", errMsg)

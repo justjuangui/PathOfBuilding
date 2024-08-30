@@ -15,6 +15,7 @@ SetMainObject(launch)
 function launch:OnInit()
 	self.devMode = true
 	self.subScripts = { }
+	self.closeRestartPopup = true -- close the popup after the first frame
 	RenderInit()
 	ConPrintf("Loading main script...")
 	local errMsg
@@ -66,20 +67,34 @@ function launch:OnFrame()
 		local r, g, b = unpack(self.promptCol)
 		self:DrawPopup(r, g, b, "^0%s", self.promptMsg)
 	end
-	if self.doRestart then
-		local screenW, screenH = GetScreenSize()
-		SetDrawColor(0, 0, 0, 0.75)
-		DrawImage(nil, 0, 0, screenW, screenH)
-		SetDrawColor(1, 1, 1)
-		DrawString(0, screenH/2, "CENTER", 24, "FIXED", self.doRestart)
-		Restart()
+
+	self.screenW, self.screenH = GetScreenSize()
+	imgui.SetNextWindowPos(self.screenW / 2, self.screenH / 2, imgui.constant.Cond.Appearing, 0.5, 0.5)
+	if imgui.BeginPopupModal("RestartPopup", true, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoBackground, imgui.constant.WindowFlags.NoMove, imgui.constant.WindowFlags.NoResize)) then
+		imgui.TextUnformatted("Restarting...")
+		if self.closeRestartPopup then
+			imgui.CloseCurrentPopup()
+			self.closeRestartPopup = false
+		end
+		imgui.EndPopup()
+	end
+
+	if self.devMode and imgui.IsKeyDown(imgui.constant.Key.F5) and not imgui.IsPopupOpen("RestartPopup") then
+		imgui.OpenPopup("RestartPopup")
+		LaunchSubScript([[
+			local sec = tonumber(os.clock() + 1); 
+			while (os.clock() < sec) do 
+			end
+			Restart()
+		]], "Restart", "")
 	end
 end
 
 function launch:OnKeyDown(key, doubleClick)
-	if key == "F5" and self.devMode then
-		self.doRestart = "Restarting..."
-	elseif key == "F6" and self.devMode then
+	--if key == "F5" and self.devMode then
+	--	self.doRestart = "Restarting..."
+	-- else
+	if key == "F6" and self.devMode then
 		local before = collectgarbage("count")
 		collectgarbage("collect")
 		ConPrintf("%dkB => %dkB", before, collectgarbage("count"))

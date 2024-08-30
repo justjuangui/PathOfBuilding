@@ -374,6 +374,223 @@ end
 function main:OnFrame()
 	self.screenW, self.screenH = GetScreenSize()
 
+	if imgui.BeginTabBar("ExportTabs") then
+		if imgui.BeginTabItem("Viewer") then
+			local spaceAvailX, spaceAvaily = imgui.GetContentRegionAvail()
+
+			imgui.BeginChild("##Viewer", spaceAvailX *0.25, 0)
+			imgui.SeparatorText("Data from: " .. (self.leagueLabel or "Unknown"))
+			imgui.SetNextItemWidth(-imgui.constant.FLT_MIN)
+			if imgui.BeginCombo("##DatSource", self.datSource and self.datSource.label or "None") then
+				for i, source in ipairs(self.datSources) do
+					local isSelected = self.datSource == source
+					if imgui.Selectable(source.label, isSelected) then
+						self:LoadDatSource(source)
+					end
+
+					if isSelected then
+						imgui.SetItemDefaultFocus()
+					end
+				end
+				imgui.EndCombo()
+			end
+			if imgui.Button("Edit Sources...") then
+				self:OpenPathPopup()
+			end
+			imgui.SeparatorText("Data Files")
+			if imgui.BeginListBox("##DatFiles", -imgui.constant.FLT_MIN, -imgui.constant.FLT_MIN) then
+				for i, datFile in ipairs(self.datFileList) do
+					local isSelected = self.curDatFile == datFile
+					if imgui.Selectable(datFile.name, isSelected) then
+						self:SetCurrentDat(datFile)
+						self.rowFilter= {}
+						for i, _ in ipairs(datFile.rows) do
+							t_insert(self.rowFilter, i)
+						end
+					end
+
+					if isSelected then
+						imgui.SetItemDefaultFocus()
+					end
+				end
+				imgui.EndListBox()
+			end	
+			imgui.EndChild()
+			imgui.SameLine()
+			imgui.BeginChild("##DatEditor", spaceAvailX * 0.75, 0)
+			if self.curDatFile then
+				spaceAvailX, spaceAvaily = imgui.GetContentRegionAvail()
+				if not self.editSpec and imgui.Button("Edit >>", spaceAvailX * 0.20, 0) then
+					self.editSpec = not self.editSpec
+					self:SetCurrentCol(1)
+				end
+
+				if self.editSpec then
+					imgui.BeginChild("##SpecColListChild", -imgui.constant.FLT_MIN, spaceAvaily * 0.40)
+					spaceAvailX, spaceAvaily = imgui.GetContentRegionAvail()
+					imgui.SeparatorText("Columns")
+
+					if imgui.Button("Done <<", spaceAvailX * 0.12, 0) then
+						self.editSpec = nil
+						self.filter = nil
+					end
+					imgui.SameLine()
+					if imgui.Button("Add", spaceAvailX * 0.12, 0) then
+						self:AddSpecCol()
+					end
+					if imgui.BeginListBox("##SpecColList", spaceAvailX * 0.25, -imgui.constant.FLT_MIN) then
+						for i, specCol in ipairs(self.curDatFile.spec) do
+							local isSelected = self.curSpecColIndex == i
+							local name = specCol.name ~= "" and specCol.name or "???"
+							if imgui.Selectable(name, isSelected) then
+								self:SetCurrentCol(i)
+							end
+
+							if isSelected then
+								imgui.SetItemDefaultFocus()
+							end
+						end
+						imgui.EndListBox()
+					end
+					
+					imgui.EndChild()
+				else
+					local changeFilter = false
+					changeFilter, self.filter = imgui.InputTextWithHint("##Filter", "Filter:", self.filter or "", imgui.constant.InputTextFlags.EnterReturnsTrue)
+					if changeFilter then
+						wipeTable(self.rowFilter)
+						local filterFunc
+						local filter = tostring(self.filter)
+						if filter:match("%S") then
+							local error
+							filterFunc, error = loadstring([[
+								return ]]..filter..[[
+							]])
+							if error then
+								self.filterErrorlabel = error
+							end
+						end
+						for rowIndex, row in ipairs(self.curDatFile.rows) do
+							if filterFunc then
+								setfenv(filterFunc, self.curDatFile:GetRowByIndex(rowIndex))
+								local status, result = pcall(filterFunc)
+								if status then
+									if result then
+										t_insert(self.rowFilter, rowIndex)
+									end
+								else
+									self.filterErrorlabel = string.format("^7Row %d: %s", rowIndex, result)
+									goto error_searching
+								end
+							else
+								t_insert(self.rowFilter, rowIndex)
+							end
+						end
+						:: error_searching ::
+					end
+					if imgui.IsItemHovered() then
+						imgui.PushStyleVar(imgui.constant.StyleVar.PopupBorderSize, 3.0)
+						imgui.BeginTooltip()
+						imgui.TextUnformatted("Takes a Lua expression that returns true or false for a row.")
+							imgui.TextUnformatted("E.g. `Id:match(\"test\")` or for a key column, `Col and Col.Id:match(\"test\")`")
+						imgui.EndTooltip()
+						imgui.PopStyleVar()
+					end
+					if self.filterErrorlabel then
+						imgui.SameLine()
+						imgui.TextUnformatted(self.filterErrorlabel)
+					end
+				end
+
+				local totalColumns = #self.curDatFile.spec + 1
+				local short = self.curDatFile.rowSize - self.curDatFile.specSize
+				if short > 0 then
+					totalColumns = totalColumns + 1
+				end
+
+				local tableFlags = imgui.constant.TableFlags.Borders
+				-- tableFlags = bit.bor(tableFlags,imgui.constant.TableFlags.Resizable)
+				tableFlags = bit.bor(tableFlags,imgui.constant.TableFlags.ScrollX)
+				tableFlags = bit.bor(tableFlags,imgui.constant.TableFlags.ScrollY)
+				tableFlags = bit.bor(tableFlags, imgui.constant.TableFlags.SizingFixedFit)
+				tableFlags = bit.bor(tableFlags, imgui.constant.TableFlags.RowBg)
+				tableFlags = bit.bor(tableFlags, imgui.constant.TableFlags.NoSavedSettings)
+
+				if imgui.BeginTable("TableView", totalColumns, tableFlags, -imgui.constant.FLT_MIN, -imgui.constant.FLT_MIN) then
+					imgui.TableSetupScrollFreeze(1,1)
+					imgui.TableSetupColumn("#")
+					for _, specCol in ipairs(self.curDatFile.spec) do
+						imgui.TableSetupColumn(specCol.name)
+					end
+					if short > 0 then
+						imgui.TableSetupColumn("HEX")
+					end
+
+					imgui.TableHeadersRow()
+					local clipper = imgui.ListClipper()
+					clipper:Begin(#self.rowFilter)
+					while clipper:Step() do
+						for iInRowFilter = clipper.DisplayStart + 1, clipper.DisplayEnd do
+							local i = self.rowFilter[iInRowFilter]
+							imgui.TableNextRow()
+							imgui.TableSetColumnIndex(0)
+							imgui.TextUnformatted(tostring(i))
+							for j, _ in ipairs(self.curDatFile.spec) do
+								if imgui.TableSetColumnIndex(j) then
+									local value =  self.curDatFile:ReadCellText(i, j)
+									if type(value) == "table" then
+										for i, v in ipairs(value) do
+											value[i] = tostring(v)
+										end
+										imgui.TextUnformatted(table.concat(value, ", "))
+									else
+										imgui.TextUnformatted(tostring(value))
+									end
+								end
+							end
+							if short > 0 then
+								if imgui.TableSetColumnIndex(totalColumns-1) then
+									local out = { self.curDatFile:ReadCellRaw(i, totalColumns-1) }
+									for i, b in ipairs(out) do
+										out[i] = string.format("%02X", b)
+									end
+									imgui.TextUnformatted(table.concat(out, " "))
+								end
+							end
+						end
+					end
+					imgui.EndTable()
+				end
+			end
+			imgui.EndChild()
+			imgui.EndTabItem()
+		end
+		if imgui.BeginTabItem("Scripts >>") then
+			if imgui.BeginListBox("##Scripts", -imgui.constant.FLT_MIN, -imgui.constant.FLT_MIN) then
+				for i, script in ipairs(self.scriptList) do
+					if imgui.Selectable(script) then
+						t_insert(remainingScripts, script)
+					end
+				end
+				imgui.EndListBox()
+			end	
+			imgui.EndTabItem()
+		end
+		imgui.EndTabBar()
+	end
+	
+
+	imgui.SetNextWindowPos(self.screenW / 2, self.screenH / 2, imgui.constant.Cond.Appearing, 0.5, 0.5)
+	if imgui.BeginPopupModal("TestPopup", true, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoBackground, imgui.constant.WindowFlags.NoMove, imgui.constant.WindowFlags.NoResize)) then
+		imgui.TextUnformatted("Restarting...")
+		if imgui.Button("Close") then
+			imgui.CloseCurrentPopup()
+		end
+		imgui.EndPopup()
+	end
+
+	
+
 	self.viewPort = { x = 0, y = 0, width = self.screenW, height = self.screenH }
 
 	if self.popups[1] then

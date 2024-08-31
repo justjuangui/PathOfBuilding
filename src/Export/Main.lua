@@ -578,18 +578,6 @@ function main:OnFrame()
 		end
 		imgui.EndTabBar()
 	end
-	
-
-	imgui.SetNextWindowPos(self.screenW / 2, self.screenH / 2, imgui.constant.Cond.Appearing, 0.5, 0.5)
-	if imgui.BeginPopupModal("TestPopup", true, bit.bor(imgui.constant.WindowFlags.NoTitleBar, imgui.constant.WindowFlags.NoBackground, imgui.constant.WindowFlags.NoMove, imgui.constant.WindowFlags.NoResize)) then
-		imgui.TextUnformatted("Restarting...")
-		if imgui.Button("Close") then
-			imgui.CloseCurrentPopup()
-		end
-		imgui.EndPopup()
-	end
-
-	
 
 	self.viewPort = { x = 0, y = 0, width = self.screenW, height = self.screenH }
 

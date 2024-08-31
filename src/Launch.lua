@@ -16,6 +16,8 @@ launch = { }
 SetMainObject(launch)
 
 function launch:OnInit()
+	ConPrintf(string.format("LuaJIT version %s", jit.version))
+
 	self.devMode = false
 	self.installedMode = false
 	self.versionNumber = "?"

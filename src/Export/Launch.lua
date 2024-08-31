@@ -17,6 +17,7 @@ function launch:OnInit()
 	self.subScripts = { }
 	self.closeRestartPopup = true -- close the popup after the first frame
 	RenderInit()
+	ConPrintf(string.format("LuaJIT version %s", jit.version))
 	ConPrintf("Loading main script...")
 	local errMsg
 	errMsg, self.main = PLoadModule("Main", self)

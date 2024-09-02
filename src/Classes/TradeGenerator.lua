@@ -134,13 +134,6 @@ function TradeGeneratorClass:GenerateExactMatchTradeLink(ObjectToMap, excludeRul
 	type = type or "items"
 	local mapper = type == "gems" and self.gemMapper or self.itemMapper
 
-	if not excludeRuleList then
-		excludeRuleList = {}
-		main.tradeSearchRules[type]:gsub("([^;]+)", function(ruleName)
-			excludeRuleList[ruleName] = true
-		end)
-	end	
-
 	local modTrade = mapper:Execute(ObjectToMap, excludeRuleList)
 
 	local search = {
@@ -252,10 +245,6 @@ function TradeGeneratorClass:GeneratePopupItemSettings(callback, type)
 	type = type or "items"
 	local mapper = type == "gems" and self.gemMapper or self.itemMapper
 	local title = type == "gems" and "Gem trade rules" or "Item trade rules"
-	
-	main.tradeSearchRules[type]:gsub("([^;]+)", function(ruleName)
-		excludeRuleList[ruleName] = true
-	end)
 
 	for _, rule in ipairs(mapper:GetRules()) do
 		local anchor = (previousItem and {"TOPRIGHT", previousItem, "BOTTOMRIGHT"}) or nil
@@ -279,17 +268,6 @@ function TradeGeneratorClass:GeneratePopupItemSettings(callback, type)
 	end)
 	
 	controls.close = new("ButtonControl", {"TOPLEFT", controls.generate, "TOPRIGHT"}, 6, 0, 120, 20, "Cancel", function()
-		main:ClosePopup()
-	end)
-
-	height = height + 20
-	controls.save = new ("ButtonControl", {"TOPLEFT", controls.generate, "BOTTOMLEFT"}, 0, 4, 120+120+6, 20, "Save my preferences", function()
-		local stringExcludeRules = ""
-		for ruleName, _ in pairs(excludeRuleList) do
-			stringExcludeRules = stringExcludeRules .. ruleName .. ";"
-		end
-		main.tradeSearchRules[type] = stringExcludeRules
-		main:SaveSettings()
 		main:ClosePopup()
 	end)
 	

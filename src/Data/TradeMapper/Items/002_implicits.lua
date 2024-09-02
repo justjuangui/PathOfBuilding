@@ -4,9 +4,9 @@ return {
 	run = function (item, modTrade, parseLineTrade)
 		if item.implicitModLines and #item.implicitModLines > 0 then
 			for _, mod in ipairs(item.implicitModLines) do
-				local modTag = parseLineTrade(mod, "implicit")
-	
-				if modTag then
+				local modTags = parseLineTrade(mod, "implicit")
+
+				for _, modTag in ipairs(modTags) do
 					modTag.name = "StatsFilter" -- How to use Constant Here
 					modTrade:AddMod(modTag)
 				end

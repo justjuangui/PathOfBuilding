@@ -34,10 +34,10 @@ local function generateFunctionParseWithValues(out, outPrefix, entryText, modTra
 
 	strFunDefinition = strFunDefinition .. ') '
 	strFunBody = strFunBody .. '}} end'
-	out:write(outPrefix ..'["'..textFormat..'"]='.. strFunDefinition..strFunBody..',\n')
+	out:write(outPrefix ..'{l="'..textFormat.. '",val='.. strFunDefinition..strFunBody..'},\n')
 end
 
-local function findModItemWithMultipleStats(condFunc, modTrade,out, outPrefix)
+local function findModItemWithMultipleStats(condFunc, modTrade,out, outPrefix, index)
 	local statsProcessed = {}
 	for mod in dat("Mods"):Rows() do
 		if not condFunc(mod) then
@@ -68,16 +68,16 @@ local function findModItemWithMultipleStats(condFunc, modTrade,out, outPrefix)
 
 							if modTrade[formatIncreased..suffix] then
 								local increasedTradeId = modTrade[formatIncreased..suffix]
-								generateFunctionParseWithValues(out, outPrefix, formatDecreased..suffix, increasedTradeId, true, nil)
+								generateFunctionParseWithValues(out, outPrefix, formatDecreased..suffix, increasedTradeId, true, nil, index)
 							elseif modTrade[formatDecreased..suffix] then
 								local decreasedTradeId = modTrade[formatDecreased..suffix]	
-								generateFunctionParseWithValues(out, outPrefix, formatIncreased..suffix, decreasedTradeId, false, nil)
+								generateFunctionParseWithValues(out, outPrefix, formatIncreased..suffix, decreasedTradeId, false, nil, index)
 							elseif modTrade[formatIncreased] then
 								local increasedTradeId = modTrade[formatIncreased]	
-								generateFunctionParseWithValues(out, outPrefix, formatDecreased, increasedTradeId, true, nil)
+								generateFunctionParseWithValues(out, outPrefix, formatDecreased, increasedTradeId, true, nil, index)
 							elseif modTrade[formatDecreased] then
 								local decreasedTradeId = modTrade[formatDecreased]	
-								generateFunctionParseWithValues(out, outPrefix, formatIncreased, decreasedTradeId, false, nil)
+								generateFunctionParseWithValues(out, outPrefix, formatIncreased, decreasedTradeId, false, nil, index)
 							else
 								print("==> ModTrade not found for increased mod with multiple stats: "..mod.Id .. " increased: "..increasedStat.text)
 							end
@@ -94,10 +94,10 @@ local function findModItemWithMultipleStats(condFunc, modTrade,out, outPrefix)
 							
 							if modTrade[formatSecondStat..suffix] then
 								local secondTradeId = modTrade[formatSecondStat..suffix]
-								generateFunctionParseWithValues(out, outPrefix, formatFirstStat..suffix, secondTradeId, false, defaultValue)
+								generateFunctionParseWithValues(out, outPrefix, formatFirstStat..suffix, secondTradeId, false, defaultValue, index)
 							elseif modTrade[formatSecondStat] then
 								local secondTradeId = modTrade[formatSecondStat..suffix]
-								generateFunctionParseWithValues(out, outPrefix, formatFirstStat, secondTradeId, false, defaultValue)
+								generateFunctionParseWithValues(out, outPrefix, formatFirstStat, secondTradeId, false, defaultValue, index)
 							else
 								print("==> ModTrade not found for no place holder mod with multiple stats: "..mod.Id .. " placeholder: "..formatFirstStat)
 							end
@@ -163,7 +163,7 @@ launch:DownloadPage(
 										local textFormat = entryText:gsub("#", function(k, val)
 											return cleanAndFormatString(optionsToParse)
 										end)
-										out:write('\t\t["'..textFormat..'"]={tradeId="'..entry.id..'", option=' .. option.id .. ',values={'..option.id..'}},\n')
+										out:write('\t\t{l="'..textFormat..'",val={tradeId="'..entry.id..'", option=' .. option.id .. ',values={'..option.id..'}}},\n')
 									end
 								end
 							else
@@ -171,9 +171,9 @@ launch:DownloadPage(
 							end
 						elseif entryText:find("#") then
 							cacheEntries[entryText] = entry.id
-							generateFunctionParseWithValues(out, "\t\t", entryText, entry.id, false)
+							generateFunctionParseWithValues(out, "\t\t", entryText, entry.id, false, nil)
 						else				
-							out:write('\t\t["'..entryText..'"]="'..entry.id..'",\n')
+							out:write('\t\t{l="'..entryText..'",val="'..entry.id..'"},\n')
 						end
 					end
 				end

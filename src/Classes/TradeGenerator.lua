@@ -7,27 +7,22 @@ local t_insert = table.insert
 -- Scan a line for the earliest and longest match from the pattern list
 -- If a match is found, returns the corresponding value from the pattern list, plus the remainder of the line and a table of captures
 local function scanTrade(line, patternList, plain)
-	local bestIndex, bestEndIndex
-	local bestPattern = ""
-	local bestVal, bestStart, bestEnd, bestCaps
 	local lineLower = line:lower()
-	for pattern, patternVal in pairs(patternList) do
+	local found = {}
+	for _, patternInfo in ipairs(patternList) do
+		local pattern = patternInfo.l
+		local patternVal = patternInfo.val
 		local index, endIndex, cap1, cap2, cap3, cap4, cap5 = lineLower:find(pattern, 1, plain)
-		if index and (not bestIndex or index < bestIndex or (index == bestIndex and (endIndex > bestEndIndex or (endIndex == bestEndIndex and #pattern > #bestPattern)))) then
-			bestIndex = index
-			bestEndIndex = endIndex
-			bestPattern = pattern
-			bestVal = patternVal
-			bestStart = index
-			bestEnd = endIndex
-			bestCaps = { cap1, cap2, cap3, cap4, cap5 }
+		if index then
+			table.insert(found, {
+				modTag = patternVal,
+				line = line:sub(1, index - 1) .. line:sub(endIndex + 1, -1),
+				caps = { cap1, cap2, cap3, cap4, cap5 }
+			})
 		end
 	end
-	if bestVal then
-		return bestVal, line:sub(1, bestStart - 1) .. line:sub(bestEnd + 1, -1), bestCaps
-	else
-		return nil, line
-	end
+
+	return found
 end
 
 local function parseLineTrade(mod, whereDefault, isLocal)
@@ -38,28 +33,35 @@ local function parseLineTrade(mod, whereDefault, isLocal)
 	local modLine = mod.line .. (isLocal and " (local)" or "") -- add local tag to line
 
 	-- handle custom craft with range
-	if mod.crafted then
+	if mod.crafted or mod.custom then
 		modLine = modLine:gsub("[+-]?%(%d+%-%d+%)", function (k, val)
 			return mod.modList and #mod.modList > 0 and mod.modList[1].value or val
 		end)
 	end
 
-	-- validate if have any info in StatDescriber
-	-- handle special case like reduce, an additional arrows, etc
-	--data.describeStats(modLine, "stat_descriptions")
+	local foundTags = scanTrade(modLine, data.tradeInfo.Stats[where], nil)
+	local tradeMods = {}
 
-	modTag, line, tagCap = scanTrade(modLine, data.tradeInfo.Stats[where], nil)
-	if type(modTag) == "function" then
-		modTag = modTag(unpack(tagCap))
-	elseif type(modTag) == "string" then
-		modTag = { tradeId = modTag }
+	if (#foundTags == 0) then
+		print("No tradeInfo found for line: " .. modLine .. " in " ..  where)
+		return tradeMods
+	end	
+
+	for _, found in ipairs(foundTags) do
+		local modTag = found.modTag
+		local tagCap = found.caps
+
+		if type(modTag) == "function" then
+			modTag = modTag(unpack(tagCap))
+		elseif type(modTag) == "string" then
+			modTag = { tradeId = modTag }
+		end
+
+		modTag.line = found.line
+		table.insert(tradeMods, modTag)
 	end
 
-	if not modTag then
-		print("No tradeInfo found for line: " .. line .. " in " ..  where)
-	end
-
-	return modTag
+	return tradeMods
 end
 
 local BaseMapperClass = newClass("TradeBaseMapper", function(self, folderPath)
@@ -92,7 +94,8 @@ function BaseMapperClass:GenerateModTradeBasic()
 	modsTrade:NewMod("ArmourFilter")
 	modsTrade:NewMod("SocketFilter")
 	modsTrade:NewMod("MiscFilter")
-	modsTrade:NewMod("StatsFilter")	
+	modsTrade:NewMod("StatsFilter")
+	modsTrade:NewMod("StatsFilterCounts")	
 	return modsTrade
 end
 
@@ -229,6 +232,40 @@ function TradeGeneratorClass:GenerateExactMatchTradeLink(ObjectToMap, excludeRul
 			type = "and",
 			filters = aStats
 		})
+	end
+
+	local modStatsCounts = modTrade.mods['StatsFilterCounts']
+
+	if #modStatsCounts > 1 then
+		if not search.query.stats then
+			search.query.stats = {}
+		end
+
+		for index, orGroup in ipairs(modStatsCounts) do
+			if index == 1 then goto continue end -- Skip the first stat, as it is the name of the item
+			
+			local aStats = {}
+			for _, stat in ipairs(orGroup.values) do
+				t_insert(aStats, {
+					id = stat.tradeId,
+					value = stat.values and #stat.values> 0 and {
+						min = #stat.values > 0 and stat.values[1] or nil,
+						max = #stat.values > 1 and stat.values[2] or nil,
+						option = stat.option or nil
+					} or nil
+				})
+			end
+
+			t_insert(search.query.stats, {
+				type = "count",
+				value = {
+					min = orGroup.min,
+					max = orGroup.max
+				},
+				filters = aStats
+			})
+			::continue::
+		end
 	end
 
 	OpenURL("https://www.pathofexile.com/trade/search/?q=" .. (s_gsub(dkjson.encode(search), "[^a-zA-Z0-9]", function(a)

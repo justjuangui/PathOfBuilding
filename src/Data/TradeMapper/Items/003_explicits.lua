@@ -16,10 +16,34 @@ return {
 				end
 			end
 
+			local variantKeys = {"variant", "variantAlt", "variantAlt2", "variantAlt3", "variantAlt4", "variantAlt5"}
+
 			for _, mod in ipairs(item.explicitModLines) do
+				if mod.variantList then
+					local variantFound  = false
+					for _, key in ipairs(variantKeys) do
+						if item[key] then
+							if mod.variantList[item[key]] then
+								variantFound =  true
+							end
+						end
+					end
+
+					if not variantFound then
+						goto nextmod
+					end
+				end 
+
 				local searchInLocal = false
+				local modLine = mod.line
+				
+				if mod.crafted or mod.custom or modLine:gmatch("[+-]?%(%d+%-%d+%)") then
+					modLine = modLine:gsub("%(%d+%-%d+%)", function (k, val)
+						return mod.modList and #mod.modList > 0 and mod.modList[1].value or val
+					end)
+				end
 				for  affix, isLocal in pairs(affixesList) do
-					if mod.line:lower():match(affix) then
+					if modLine:lower():match(affix) then
 						searchInLocal = isLocal
 						break
 					end
@@ -46,11 +70,20 @@ return {
 					}
 
 					for _, modTag in ipairs(modTags) do
-						table.insert(countStatsFilter.values, modTag)
+						if modTag.line == "" and modTag.index == 1 then
+							table.insert(countStatsFilter.values, modTag)
+						end
 					end
 
-					modTrade:AddMod(countStatsFilter)
+					if #countStatsFilter.values == 1 then
+						countStatsFilter.values[1].name = "StatsFilter"
+						modTrade:AddMod(countStatsFilter.values[1])
+					else
+						modTrade:AddMod(countStatsFilter)
+					end
 				end
+
+				:: nextmod ::
 			end
 		end
 	end

@@ -33,6 +33,16 @@ local function parseLineTrade(mod, whereDefault, isLocal)
 
 	local modLine = mod.line .. (isLocal and " (local)" or "") -- add local tag to line
 
+	if modLine:find("\n") then
+		local pos = 0
+		for s in modLine:gmatch("([^\n]+)") do
+			if pos == 0 then
+				modLine = s
+			end
+			pos = pos + 1
+		end
+	end
+
 	-- handle custom craft with range
 	if mod.crafted or mod.custom or modLine:gmatch("%(%d+%-%d+%)") then
 		modLine = modLine:gsub("%(%d+%-%d+%)", function (k, val)

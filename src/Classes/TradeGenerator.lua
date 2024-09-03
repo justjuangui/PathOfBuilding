@@ -432,8 +432,10 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 			controls["modstats_value_" .. index].tooltipFunc = function(tooltip)
 				tooltip:Clear()
 				tooltip:AddLine(16, mod.displayValue)
-				tooltip:AddSeparator(10)
-				tooltip:AddLine(16, "^8TradeModId: ^7" .. mod.tradeId)
+				if launch.devModeAlt and IsKeyDown("ALT") then
+					tooltip:AddSeparator(10)
+					tooltip:AddLine(16, "^8TradeModId: ^7" .. mod.tradeId)
+				end
 			end
 			
 			if not mod.option and mod.values and #mod.values > 0 then
@@ -469,9 +471,11 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 				controls["modstatscount_value_" .. indexName].tooltipFunc = function(tooltip)
 					tooltip:Clear()
 					tooltip:AddLine(16, firstMod.displayValue)
-					tooltip:AddSeparator(10)
-					for _, mod in ipairs(orGroup.values) do
-						tooltip:AddLine(16, "^8TradeModId: ^7" .. mod.tradeId)
+					if launch.devModeAlt and IsKeyDown("ALT") then
+						tooltip:AddSeparator(10)
+						for _, mod in ipairs(orGroup.values) do
+							tooltip:AddLine(16, "^8TradeModId: ^7" .. mod.tradeId)
+						end
 					end
 				end
 				

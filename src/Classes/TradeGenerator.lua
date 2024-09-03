@@ -457,30 +457,37 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 	if #modStatsCounts > 1 then
 		for index, orGroup in ipairs(modStatsCounts) do
 			if index == 1 then goto continue end -- Skip the first stat, as it is the name of the item
-			drawSectionHeader("ModStats"..index, modStatsCounts[1].display .. " " .. index - 1)		
-			
-			for indexTwo, mod in ipairs(orGroup.values) do
-				local indexName = index .. "_" .. indexTwo
-				controls["modstatscount_check_" .. indexName] = new("CheckBoxControl", anchor, posXGeneral, currentY, 18, formatMaxString(mod.displayName), function(state)			
-					mod.enabled = state
-				end, nil, mod.enabled)
-				controls["modstatscount_value_" .. indexName] = new("LabelControl", {"TOPLEFT", controls["modstatscount_check_" .. indexName], "TOPRIGHT"}, 8, 0, 0, 16, formatMaxString(mod.displayValue), mod.displayValue)
+			if #orGroup.values > 0 then
+				local firstMod = orGroup.values[1]
+				local indexName = index .. "_"
+				controls["modstatscount_check_" .. indexName] = new("CheckBoxControl", anchor, posXGeneral, currentY, 18, formatMaxString(firstMod.displayName), function(state)			
+					for _, mod in ipairs(orGroup.values) do
+						mod.enabled = state
+					end
+				end, nil, firstMod.enabled)
+				controls["modstatscount_value_" .. indexName] = new("LabelControl", {"TOPLEFT", controls["modstatscount_check_" .. indexName], "TOPRIGHT"}, 8, 0, 0, 16, formatMaxString(firstMod.displayValue), firstMod.displayValue)
 				controls["modstatscount_value_" .. indexName].tooltipFunc = function(tooltip)
 					tooltip:Clear()
-					tooltip:AddLine(16, mod.displayValue)
+					tooltip:AddLine(16, firstMod.displayValue)
 					tooltip:AddSeparator(10)
-					tooltip:AddLine(16, "^8TradeModId: ^7" .. mod.tradeId)
+					for _, mod in ipairs(orGroup.values) do
+						tooltip:AddLine(16, "^8TradeModId: ^7" .. mod.tradeId)
+					end
 				end
 				
-				if mod.values and #mod.values > 0 then
+				if not firstMod.option and firstMod.values and #firstMod.values > 0 then
 					-- first max control
-					controls["modstatscount_value_max" .. indexName] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, -8, currentY, 80, 20, #mod.values>1 and mod.values[2] or nil, nil, "%D", 3, function(value)
-						mod.values[2] = tonumber(value) or nil
+					controls["modstatscount_value_max" .. indexName] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, -8, currentY, 80, 20, #firstMod.values>1 and firstMod.values[2] or nil, nil, "%D", 3, function(value)
+						for _, mod in ipairs(orGroup.values) do
+							mod.values[2] = tonumber(value) or nil
+						end
 					end)
 
 					-- then min control
-					controls["modstatscount_value_min" .. indexName] = new("EditControl", { "TOPRIGHT", controls["modstatscount_value_max" .. indexName], "TOPRIGHT" }, -84, 0, 80, 20, mod.values[1], nil, "%D", 3, function(value)
-						mod.values[1] = tonumber(value) or nil
+					controls["modstatscount_value_min" .. indexName] = new("EditControl", { "TOPRIGHT", controls["modstatscount_value_max" .. indexName], "TOPRIGHT" }, -84, 0, 80, 20, firstMod.values[1], nil, "%D", 3, function(value)
+						for _, mod in ipairs(orGroup.values) do
+							mod.values[1] = tonumber(value) or nil
+						end
 					end)
 				end
 

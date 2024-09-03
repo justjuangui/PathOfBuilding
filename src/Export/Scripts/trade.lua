@@ -41,7 +41,7 @@ local function generateFunctionParseWithValues(out, outPrefix, entryText, modTra
 	out:write(outPrefix ..'{l="'..textFormat.. '",val='.. strFunDefinition..strFunBody..'},\n')
 end
 
-local function findModItemWithMultipleStats(condFunc, modTrade,out, outPrefix, index)
+local function findModItemWithMultipleStats(condFunc, modTrade,out, outPrefix)
 	local statsProcessed = {}
 	for mod in dat("Mods"):Rows() do
 		if not condFunc(mod) then
@@ -72,16 +72,16 @@ local function findModItemWithMultipleStats(condFunc, modTrade,out, outPrefix, i
 
 							if modTrade[formatIncreased..suffix] then
 								local increasedTradeId = modTrade[formatIncreased..suffix]
-								generateFunctionParseWithValues(out, outPrefix, formatDecreased..suffix, increasedTradeId, true, nil, index)
+								generateFunctionParseWithValues(out, outPrefix, formatDecreased..suffix, increasedTradeId, true, nil)
 							elseif modTrade[formatDecreased..suffix] then
 								local decreasedTradeId = modTrade[formatDecreased..suffix]	
-								generateFunctionParseWithValues(out, outPrefix, formatIncreased..suffix, decreasedTradeId, false, nil, index)
+								generateFunctionParseWithValues(out, outPrefix, formatIncreased..suffix, decreasedTradeId, false, nil)
 							elseif modTrade[formatIncreased] then
 								local increasedTradeId = modTrade[formatIncreased]	
-								generateFunctionParseWithValues(out, outPrefix, formatDecreased, increasedTradeId, true, nil, index)
+								generateFunctionParseWithValues(out, outPrefix, formatDecreased, increasedTradeId, true, nil)
 							elseif modTrade[formatDecreased] then
 								local decreasedTradeId = modTrade[formatDecreased]	
-								generateFunctionParseWithValues(out, outPrefix, formatIncreased, decreasedTradeId, false, nil, index)
+								generateFunctionParseWithValues(out, outPrefix, formatIncreased, decreasedTradeId, false, nil)
 							else
 								print("==> ModTrade not found for increased mod with multiple stats: "..mod.Id .. " increased: "..increasedStat.text)
 							end
@@ -98,10 +98,10 @@ local function findModItemWithMultipleStats(condFunc, modTrade,out, outPrefix, i
 							
 							if modTrade[formatSecondStat..suffix] then
 								local secondTradeId = modTrade[formatSecondStat..suffix]
-								generateFunctionParseWithValues(out, outPrefix, formatFirstStat..suffix, secondTradeId, false, defaultValue, index)
+								generateFunctionParseWithValues(out, outPrefix, formatFirstStat..suffix, secondTradeId, false, defaultValue)
 							elseif modTrade[formatSecondStat] then
 								local secondTradeId = modTrade[formatSecondStat..suffix]
-								generateFunctionParseWithValues(out, outPrefix, formatFirstStat, secondTradeId, false, defaultValue, index)
+								generateFunctionParseWithValues(out, outPrefix, formatFirstStat, secondTradeId, false, defaultValue)
 							else
 								print("==> ModTrade not found for no place holder mod with multiple stats: "..mod.Id .. " placeholder: "..formatFirstStat)
 							end

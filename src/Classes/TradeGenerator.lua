@@ -17,6 +17,7 @@ local function scanTrade(line, patternList, plain)
 			table.insert(found, {
 				modTag = patternVal,
 				line = line:sub(1, index - 1) .. line:sub(endIndex + 1, -1),
+				index = index,
 				caps = { cap1, cap2, cap3, cap4, cap5 }
 			})
 		end
@@ -33,8 +34,8 @@ local function parseLineTrade(mod, whereDefault, isLocal)
 	local modLine = mod.line .. (isLocal and " (local)" or "") -- add local tag to line
 
 	-- handle custom craft with range
-	if mod.crafted or mod.custom then
-		modLine = modLine:gsub("[+-]?%(%d+%-%d+%)", function (k, val)
+	if mod.crafted or mod.custom or modLine:gmatch("%(%d+%-%d+%)") then
+		modLine = modLine:gsub("%(%d+%-%d+%)", function (k, val)
 			return mod.modList and #mod.modList > 0 and mod.modList[1].value or val
 		end)
 	end
@@ -58,6 +59,7 @@ local function parseLineTrade(mod, whereDefault, isLocal)
 		end
 
 		modTag.line = found.line
+		modTag.index = found.index
 		table.insert(tradeMods, modTag)
 	end
 
@@ -132,6 +134,10 @@ function TradeGeneratorClass:GenerateExactMatchTradeLink(ObjectToMap, excludeRul
 	if launch.devMode then		
 		self.itemMapper = new("TradeBaseMapper", "Data/TradeMapper/Items")
 		self.gemMapper = new("TradeBaseMapper", "Data/TradeMapper/Gems")
+	end
+
+	if not excludeRuleList then
+		excludeRuleList = {SOCKETSLINKS=true, SOCKETSSLOTS=true}
 	end
 
 	type = type or "items"
@@ -275,7 +281,7 @@ end
 
 function TradeGeneratorClass:GeneratePopupItemSettings(callback, type)
 	local controls = {}
-	local excludeRuleList = {}
+	local excludeRuleList = {SOCKETSLINKS=true, SOCKETSSLOTS=true}
 	local previousItem = nil
 	local height = 30
 	local width = 300

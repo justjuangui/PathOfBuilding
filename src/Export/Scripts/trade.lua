@@ -25,11 +25,15 @@ local function generateFunctionParseWithValues(out, outPrefix, entryText, modTra
 	local strFunBody = 'return {tradeId="'..modTradeId..'",values={' .. defaultValue
 
 	-- we are mathinng 5, +5, -5, 0.5, -0.5, +0.5
-	local textFormat = entryText:gsub("[+-]?#",function(k, val)
+	local textFormat = entryText:gsub("[+]",function(k, val)
+		return "[+-]"
+	end)
+
+	textFormat = textFormat:gsub("#",function(k, val)
 		strFunDefinition = strFunDefinition .. (paramIndex > 0 and ',' or '') .. 'num' .. paramIndex
 		strFunBody = strFunBody .. (paramIndex > 0 and ',' or '') .. (negate and '-1*' or '') .. 'num'.. paramIndex
 		paramIndex = paramIndex + 1
-		return "([0-9.+-]+)"
+		return "([0-9.]+)"
 	end)
 
 	strFunDefinition = strFunDefinition .. ') '

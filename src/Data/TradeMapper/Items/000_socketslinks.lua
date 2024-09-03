@@ -21,7 +21,7 @@ return {
 				end
 			end
 			if maxLinks then
-				modTrade:NewMod("SocketFilter", "links", maxLinks)
+				modTrade:AddMod({name="SocketFilter", type="links", value=maxLinks, enabled=false, displayName="Links"})
 			end
 		end
 	end

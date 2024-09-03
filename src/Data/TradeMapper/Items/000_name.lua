@@ -3,10 +3,10 @@ return {
 	name = "Name",
 	run = function (item, modTrade, parseLineTrade)
 		if item.baseName then
-			modTrade:NewMod("NameFilter", "type", item.baseName)
+			modTrade:AddMod({name="NameFilter", type="type", value=item.baseName, displayName="Base", enabled=true})
 		end	
 		if item.rarity == 'UNIQUE' and item.title then
-			modTrade:NewMod("NameFilter", "name", item.title)
+			modTrade:AddMod({name="NameFilter", type="name", value=item.title, displayName="Name", enabled=true})
 		end
 	end
 }

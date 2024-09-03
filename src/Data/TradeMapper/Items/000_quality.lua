@@ -3,7 +3,7 @@ return {
 	name = "Quality",
 	run = function (item, modTrade, parseLineTrade)
 		if item.quality and item.quality > 0 then
-			modTrade:NewMod("MiscFilter", "quality", { min = item.quality })
+			modTrade:AddMod({name="MiscFilter", type="quality", value={ min = item.quality }, displayName="Quality", enabled=true})
 		end	
 	end
 }

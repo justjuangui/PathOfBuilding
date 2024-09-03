@@ -8,7 +8,7 @@ return {
 				local socketColor = socket.color:lower()
 				sockets[socketColor] = (sockets[socketColor] or 0) + 1
 			end
-			modTrade:NewMod("SocketFilter", "sockets", sockets)
+			modTrade:AddMod({name="SocketFilter", type="sockets", value=sockets, enabled=false, displayName="Slots"})
 		end
 	end
 }

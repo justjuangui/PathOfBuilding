@@ -100,14 +100,15 @@ end)
 
 function BaseMapperClass:GenerateModTradeBasic()
 	local modsTrade = new("ModDB")
-	modsTrade:NewMod("NameFilter")
-	modsTrade:NewMod("TypeFilter")
-	modsTrade:NewMod("WeaponFilter")
-	modsTrade:NewMod("ArmourFilter")
-	modsTrade:NewMod("SocketFilter")
-	modsTrade:NewMod("MiscFilter")
-	modsTrade:NewMod("StatsFilter")
-	modsTrade:NewMod("StatsFilterCounts")	
+	modsTrade:AddMod({name="NameFilter", display="Name filter"})
+	modsTrade:AddMod({name="TypeFilter", display="Type filters"})
+	modsTrade:AddMod({name="WeaponFilter", display="Weapon filters"})
+	modsTrade:AddMod({name="ArmourFilter", display="Armour filters"})
+	modsTrade:AddMod({name="SocketFilter", display="Socket filters"})
+	modsTrade:AddMod({name="MiscFilter", display="Misc filters"})
+	modsTrade:AddMod({name="StatsFilter", display="Stats filters"})
+	modsTrade:AddMod({name="StatsFilterCounts" , display="Count"})
+
 	return modsTrade
 end
 
@@ -140,21 +141,29 @@ local TradeGeneratorClass = newClass("TradeGenerator", function(self)
 	self.gemMapper = new("TradeBaseMapper", "Data/TradeMapper/Gems")
 	
 end)
+
 function TradeGeneratorClass:GenerateExactMatchTradeLink(ObjectToMap, excludeRuleList, type)
+	local modTrade = self:ParserObjectToMap(ObjectToMap, excludeRuleList, type)
+	self:OpenInBrowserModTrades(modTrade)
+end
+
+function TradeGeneratorClass:ParserObjectToMap(objectToMap, excludeRuleList, type)
 	if launch.devMode then		
 		self.itemMapper = new("TradeBaseMapper", "Data/TradeMapper/Items")
 		self.gemMapper = new("TradeBaseMapper", "Data/TradeMapper/Gems")
 	end
 
-	if not excludeRuleList then
+	if excludeRuleList == nil then
 		excludeRuleList = {SOCKETSLINKS=true, SOCKETSSLOTS=true}
 	end
 
 	type = type or "items"
 	local mapper = type == "gems" and self.gemMapper or self.itemMapper
 
-	local modTrade = mapper:Execute(ObjectToMap, excludeRuleList)
+	return mapper:Execute(objectToMap, excludeRuleList)
+end
 
+function TradeGeneratorClass:OpenInBrowserModTrades(modTrade)
 	local search = {
 		query = {
 			status = {
@@ -171,7 +180,7 @@ function TradeGeneratorClass:GenerateExactMatchTradeLink(ObjectToMap, excludeRul
 
 	if #modName > 1 then
 		for index, mod in ipairs(modName) do
-			if index == 1 then goto continue end -- Skip the first name, as it is the name of the item
+			if index == 1 or not mod.enabled then goto continue end -- Skip the first name, as it is the name of the item
 
 			search.query[mod.type] = mod.value
 			::continue::
@@ -192,7 +201,7 @@ function TradeGeneratorClass:GenerateExactMatchTradeLink(ObjectToMap, excludeRul
 		end
 
 		for index, mod in ipairs(modMisc) do
-			if index == 1 then goto continue end -- Skip the first name, as it is the name of the item
+			if index == 1 or not mod.enabled then goto continue end -- Skip the first name, as it is the name of the item
 
 			search.query.filters.misc_filters.filters[mod.type] = mod.value
 			::continue::
@@ -213,7 +222,7 @@ function TradeGeneratorClass:GenerateExactMatchTradeLink(ObjectToMap, excludeRul
 		end
 
 		for index, mod in ipairs(modSocket) do
-			if index == 1 then goto continue end -- Skip the first name, as it is the name of the item
+			if index == 1 or not mod.enabled then goto continue end -- Skip the first name, as it is the name of the item
 
 			search.query.filters.socket_filters.filters[mod.type] = mod.value
 			::continue::
@@ -229,7 +238,7 @@ function TradeGeneratorClass:GenerateExactMatchTradeLink(ObjectToMap, excludeRul
 
 		local aStats = {}
 		for index, stat in ipairs(modStats) do
-			if index == 1 then goto continue end -- Skip the first stat, as it is the name of the item
+			if index == 1 or not stat.enabled then goto continue end -- Skip the first stat, as it is the name of the item
 
 			t_insert(aStats, {
 				id = stat.tradeId,
@@ -262,6 +271,7 @@ function TradeGeneratorClass:GenerateExactMatchTradeLink(ObjectToMap, excludeRul
 			
 			local aStats = {}
 			for _, stat in ipairs(orGroup.values) do
+				if not stat.enabled then goto continue2 end
 				t_insert(aStats, {
 					id = stat.tradeId,
 					value = stat.values and #stat.values> 0 and {
@@ -270,6 +280,7 @@ function TradeGeneratorClass:GenerateExactMatchTradeLink(ObjectToMap, excludeRul
 						option = stat.option or nil
 					} or nil
 				})
+				::continue2::
 			end
 
 			t_insert(search.query.stats, {
@@ -289,34 +300,156 @@ function TradeGeneratorClass:GenerateExactMatchTradeLink(ObjectToMap, excludeRul
 	end)))
 end
 
-function TradeGeneratorClass:GeneratePopupItemSettings(callback, type)
-	local controls = {}
-	local excludeRuleList = {SOCKETSLINKS=true, SOCKETSSLOTS=true}
-	local previousItem = nil
-	local height = 30
-	local width = 300
-	type = type or "items"
-	local mapper = type == "gems" and self.gemMapper or self.itemMapper
+function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleList, type)
+	-- generate all trade items
+	local modTrade = self:ParserObjectToMap(objectToMap, {}, type)
 	local title = type == "gems" and "Gem trade rules" or "Item trade rules"
 
-	for _, rule in ipairs(mapper:GetRules()) do
-		local anchor = (previousItem and {"TOPRIGHT", previousItem, "BOTTOMRIGHT"}) or nil
-		local xPos = not previousItem and 20 or 0
-		local yPos = not previousItem and height or 2
-		local initialState = true
-		if excludeRuleList[rule.id] then
-			initialState = false
+	local controls = {}
+
+	-- TODO: Enabled scroll if height is lower than the screen
+	local currentY = 0
+	local popupWidth = 600
+	local pxPerLine = 26
+	local posXGeneral = 8 + 82
+	local anchor = {"TOPLEFT", nil, "TOPLEFT"}
+
+	local function formatMaxString(str)
+		local maxLen = 50
+		if #str > maxLen then
+			return str:sub(1, maxLen - 3) .. "..."
 		end
-		controls[rule.id] = new("CheckBoxControl", anchor, xPos, yPos, 18, rule.name, function(state)
-			excludeRuleList[rule.id] = not state or nil
-		end, nil, initialState)
-		previousItem = controls[rule.id]
-		height = height + 20
+		return str
+	end
+	local function nextRow(heightModifier)
+		heightModifier = heightModifier or 1
+		currentY = currentY + heightModifier * pxPerLine
+	end
+	local function drawSectionHeader(id, title)
+		local headerBGColor ={ .6, .6, .6}
+		controls["section-"..id .. "-bg"] = new("RectangleOutlineControl", { "TOPLEFT", nil, "TOPLEFT" }, 8, currentY, popupWidth - 17, 26, headerBGColor, 1)
+		nextRow(.2)
+		controls["section-"..id .. "-label"] = new("LabelControl", { "TOPLEFT", nil, "TOPLEFT" }, popupWidth / 2 - 60, currentY, 0, 16, "^7" .. title)
+		nextRow(1)
 	end
 
-	height = height + 18
-	controls.generate = new("ButtonControl", {"TOPLEFT", nil, "TOPLEFT"} , (width / 2) - 120 - (6/2),height, 120, 20, "Open Trade Link", function()
-		callback(excludeRuleList)
+	nextRow(1)
+
+	local modName = modTrade.mods['NameFilter']
+	if #modName > 1 then
+		drawSectionHeader("NameFilter", modName[1].display)
+		for index, mod in ipairs(modName) do
+			if index == 1 then goto continue end -- Skip the first name, as it is the name of the item
+			
+			controls["name_check_" .. index] = new("CheckBoxControl", anchor, posXGeneral, currentY, 18, formatMaxString(mod.displayName), function(state)			
+				mod.enabled = state
+			end, nil, mod.enabled)
+			controls["name_value_" .. index] = new("LabelControl", {"TOPLEFT", controls["name_check_" .. index], "TOPRIGHT"}, 8, 0, 0, 16, formatMaxString(mod.value))
+			nextRow(1)
+			::continue::
+		end
+	end
+
+	local modMisc = modTrade.mods['MiscFilter']
+	if #modMisc > 1 then
+		drawSectionHeader("ModMisc", modMisc[1].display)
+		for index, mod in ipairs(modMisc) do
+			if index == 1 then goto continue end -- Skip the first name, as it is the name of the item
+			
+			controls["modmisc_check_" .. index] = new("CheckBoxControl", anchor, posXGeneral, currentY, 18, formatMaxString(mod.displayName), function(state)			
+				mod.enabled = state
+			end, nil, mod.enabled)
+			
+			if mod.type == "quality" or mod.type == "gem_level" then
+				-- first max control
+				controls["modmisc_value_max" .. index] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, -8, currentY, 80, 20, mod.value.max or nil, nil, "%D", 3, function(value)
+					mod.value.max = tonumber(value) or nil
+				end)
+
+				-- then min control
+				controls["modmisc_value_min" .. index] = new("EditControl", { "TOPRIGHT", controls["modmisc_value_max" .. index], "TOPRIGHT" }, -84, 0, 80, 20, mod.value.min, nil, "%D", 3, function(value)
+					mod.value.min = tonumber(value) or nil
+				end)
+			end
+			nextRow(1)
+			::continue::
+		end
+	end
+
+	local modSocket = modTrade.mods['SocketFilter']
+	if #modSocket > 1 then
+		drawSectionHeader("ModSocket", modSocket[1].display)
+		for index, mod in ipairs(modSocket) do
+			if index == 1 then goto continue end -- Skip the first name, as it is the name of the item
+			
+			controls["modsocket_check_" .. index] = new("CheckBoxControl", anchor, posXGeneral, currentY, 18, formatMaxString(mod.displayName), function(state)			
+				mod.enabled = state
+			end, nil, mod.enabled)
+
+			if mod.type == "links" then
+				-- first max control
+				controls["modsocket_value_max" .. index] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, -8, currentY, 80, 20, mod.value.max or nil, nil, "%D", 3, function(value)
+					mod.value.max = tonumber(value) or nil
+				end)
+
+				-- then min control
+				controls["modsocket_value_min" .. index] = new("EditControl", { "TOPRIGHT", controls["modsocket_value_max" .. index], "TOPRIGHT" }, -84, 0, 80, 20, mod.value.min, nil, "%D", 3, function(value)
+					mod.value.min = tonumber(value) or nil
+				end)
+			elseif mod.type == "sockets" then
+				-- first B control
+				controls["modsocket_value_b" .. index] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, -8, currentY, 80, 20, mod.value.b or nil, "B", "%D", 3, function(value)
+					mod.value.b = tonumber(value) or nil
+				end)
+
+				-- then G control
+				controls["modsocket_value_g" .. index] = new("EditControl", { "TOPRIGHT", controls["modsocket_value_b" .. index], "TOPRIGHT" }, -84, 0, 80, 20, mod.value.g or nil, "G", "%D", 3, function(value)
+					mod.value.g = tonumber(value) or nil
+				end)
+
+				-- then R control
+				controls["modsocket_value_r" .. index] = new("EditControl", { "TOPRIGHT", controls["modsocket_value_g" .. index], "TOPRIGHT" }, -84, 0, 80, 20, mod.value.r or nil, "R", "%D", 3, function(value)
+					mod.value.r = tonumber(value) or nil
+				end)
+			end
+
+			nextRow(1)
+			::continue::
+		end
+	end
+
+	local modStats = modTrade.mods['StatsFilter']
+	if #modStats > 1 then
+		drawSectionHeader("ModStats", modStats[1].display)
+		for index, mod in ipairs(modStats) do
+			if index == 1 then goto continue end -- Skip the first name, as it is the name of the item
+			
+			controls["modstats_check_" .. index] = new("CheckBoxControl", anchor, posXGeneral, currentY, 18, formatMaxString(mod.displayName), function(state)			
+				mod.enabled = state
+			end, nil, mod.enabled)
+			controls["modstats_value_" .. index] = new("LabelControl", {"TOPLEFT", controls["modstats_check_" .. index], "TOPRIGHT"}, 8, 0, 0, 16, formatMaxString(mod.displayValue), mod.displayValue)
+			controls["modstats_value_" .. index].tooltipText = mod.displayValue
+			
+			if mod.values and #mod.values > 0 then
+				-- first max control
+				controls["modstats_value_max" .. index] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, -8, currentY, 80, 20, #mod.values>1 and mod.values[2] or nil, nil, "%D", 3, function(value)
+					mod.values[2] = tonumber(value) or nil
+				end)
+
+				-- then min control
+				controls["modstats_value_min" .. index] = new("EditControl", { "TOPRIGHT", controls["modstats_value_max" .. index], "TOPRIGHT" }, -84, 0, 80, 20, mod.values[1], nil, "%D", 3, function(value)
+					mod.values[1] = tonumber(value) or nil
+				end)
+			end
+
+			nextRow(1)
+			::continue::
+		end
+	end
+
+	nextRow(0.5)
+	controls.generate = new("ButtonControl", {"TOPLEFT", nil, "TOPLEFT"} , (popupWidth / 2) - 120 - (6/2),currentY, 120, 20, "Open Trade Link", function()
+		self:OpenInBrowserModTrades(modTrade)
 		main:ClosePopup()
 	end)
 	
@@ -324,6 +457,6 @@ function TradeGeneratorClass:GeneratePopupItemSettings(callback, type)
 		main:ClosePopup()
 	end)
 	
-	height = height + 38
-	main:OpenPopup(300, height, title, controls, nil, nil, "close", nil, nil)
+	nextRow(1)
+	main:OpenPopup(popupWidth, currentY, title, controls, nil, nil, "close", nil, nil)
 end

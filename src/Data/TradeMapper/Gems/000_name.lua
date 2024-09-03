@@ -31,7 +31,7 @@ return {
 				if gem.supportEffect and gem.skillId:match("Support") then
 					gemName = gemName .. " Support"
 				end
-				modTrade:NewMod("NameFilter", "type", gemName)
+				modTrade:AddMod({name="NameFilter", type="type", value=gemName, displayName="Name", enabled=true})
 			end
 		end	
 	end

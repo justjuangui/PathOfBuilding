@@ -306,9 +306,7 @@ holding Shift will put it in the second.]])
 			if IsKeyDown("CTRL") then
 				self.tradeGenerator:GenerateExactMatchTradeLink(self.displayItem, nil, "items")
 			else
-				self.tradeGenerator:GeneratePopupItemSettings(function(excludeRuleList)
-					self.tradeGenerator:GenerateExactMatchTradeLink(self.displayItem, excludeRuleList, "items")
-				end, "items")
+				self.tradeGenerator:GeneratePopupItemSettings(self.displayItem, nil, "items")
 			end
 		end
 	end)

@@ -3,7 +3,7 @@ return {
 	name = "Level",
 	run = function (gem, modTrade, parseLineTrade)
 		if gem.level then
-			modTrade:NewMod("MiscFilter", "gem_level", { min = gem.level })
+			modTrade:AddMod({name="MiscFilter", type="gem_level", value={ min = gem.level }, displayName="Level", enabled=true})
 		end	
 	end
 }

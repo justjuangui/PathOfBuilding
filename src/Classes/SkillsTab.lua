@@ -895,9 +895,7 @@ function SkillsTabClass:CreateGemSlot(index)
 			if IsKeyDown("CTRL") then
 				self.tradeGenerator:GenerateExactMatchTradeLink(gemInstance, nil, "gems")
 			else
-				self.tradeGenerator:GeneratePopupItemSettings(function(excludeRuleList)
-					self.tradeGenerator:GenerateExactMatchTradeLink(gemInstance, excludeRuleList, "gems")
-				end, "gems")
+				self.tradeGenerator:GeneratePopupItemSettings(gemInstance, nil, "gems")
 			end
 		end
 	end)

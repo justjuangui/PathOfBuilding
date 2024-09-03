@@ -26,13 +26,7 @@ local function scanTrade(line, patternList, plain)
 	return found
 end
 
-local function parseLineTrade(mod, whereDefault, isLocal)
-	if not whereDefault then whereDefault = "explicit" end
-	
-	local where = whereDefault ~= "enchant" and ((mod.fractured and "fractured") or (mod.crafted and "crafted")) or whereDefault
-
-	local modLine = mod.line .. (isLocal and " (local)" or "") -- add local tag to line
-
+local function parseRangeOrCustom(mod, modLine)
 	if modLine:find("\n") then
 		local pos = 0
 		for s in modLine:gmatch("([^\n]+)") do
@@ -43,12 +37,19 @@ local function parseLineTrade(mod, whereDefault, isLocal)
 		end
 	end
 
-	-- handle custom craft with range
-	if mod.crafted or mod.custom or modLine:gmatch("%(%d+%-%d+%)") then
-		modLine = modLine:gsub("%(%d+%-%d+%)", function (k, val)
-			return mod.modList and #mod.modList > 0 and mod.modList[1].value or val
-		end)
-	end
+	modLine = mod.range and itemLib.applyRange(modLine, mod.range, mod.valueScalar) or modLine
+
+	return modLine
+end
+
+local function parseLineTrade(mod, whereDefault, isLocal)
+	if not whereDefault then whereDefault = "explicit" end
+	
+	local where = whereDefault ~= "enchant" and ((mod.fractured and "fractured") or (mod.crafted and "crafted")) or whereDefault
+
+	local modLine = mod.line .. (isLocal and " (local)" or "") -- add local tag to line
+
+	modLine = parseRangeOrCustom(mod, modLine)
 
 	local foundTags = scanTrade(modLine, data.tradeInfo.Stats[where], nil)
 	local tradeMods = {}
@@ -116,7 +117,7 @@ function BaseMapperClass:Execute(objRef, excludeRuleList)
 	local modsTrade = self:GenerateModTradeBasic()
 	for _, rule in ipairs(self.rules) do
 		if not excludeRuleList or not excludeRuleList[rule.id] then
-			local errMsg = PCall(rule.run, objRef, modsTrade, parseLineTrade)
+			local errMsg = PCall(rule.run, objRef, modsTrade, parseLineTrade, parseRangeOrCustom)
 
 			if errMsg then
 				print("Error executing rule: "..errMsg)
@@ -435,7 +436,7 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 				tooltip:AddLine(16, "^8TradeModId: ^7" .. mod.tradeId)
 			end
 			
-			if mod.values and #mod.values > 0 then
+			if not mod.option and mod.values and #mod.values > 0 then
 				-- first max control
 				controls["modstats_value_max" .. index] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, -8, currentY, 80, 20, #mod.values>1 and mod.values[2] or nil, nil, "%D", 3, function(value)
 					mod.values[2] = tonumber(value) or nil

@@ -1,7 +1,7 @@
 return {
 	id = "EXPLICITS",
 	name = "Explicits",
-	run = function (item, modTrade, parseLineTrade)
+	run = function (item, modTrade, parseLineTrade, parseRangeOrCustom)
 		if item.explicitModLines and #item.explicitModLines > 0 then
 			-- validate if base and filter affix, then lookcup for "local tag"
 			local affixesList = {}			
@@ -39,12 +39,8 @@ return {
 
 				local searchInLocal = false
 				local modLine = mod.line
-				
-				if mod.crafted or mod.custom or modLine:gmatch("[+-]?%(%d+%-%d+%)") then
-					modLine = modLine:gsub("%(%d+%-%d+%)", function (k, val)
-						return mod.modList and #mod.modList > 0 and mod.modList[1].value or val
-					end)
-				end
+				modLine = parseRangeOrCustom(mod, modLine)
+
 				for  affix, isLocal in pairs(affixesList) do
 					if modLine:lower():match(affix) then
 						searchInLocal = isLocal

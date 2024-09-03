@@ -107,7 +107,7 @@ function BaseMapperClass:GenerateModTradeBasic()
 	modsTrade:AddMod({name="SocketFilter", display="Socket filters"})
 	modsTrade:AddMod({name="MiscFilter", display="Misc filters"})
 	modsTrade:AddMod({name="StatsFilter", display="Stats filters"})
-	modsTrade:AddMod({name="StatsFilterCounts" , display="Count"})
+	modsTrade:AddMod({name="StatsFilterCounts" , display="Count filter"})
 
 	return modsTrade
 end
@@ -428,7 +428,12 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 				mod.enabled = state
 			end, nil, mod.enabled)
 			controls["modstats_value_" .. index] = new("LabelControl", {"TOPLEFT", controls["modstats_check_" .. index], "TOPRIGHT"}, 8, 0, 0, 16, formatMaxString(mod.displayValue), mod.displayValue)
-			controls["modstats_value_" .. index].tooltipText = mod.displayValue
+			controls["modstats_value_" .. index].tooltipFunc = function(tooltip)
+				tooltip:Clear()
+				tooltip:AddLine(16, mod.displayValue)
+				tooltip:AddSeparator(10)
+				tooltip:AddLine(16, "^8TradeModId: ^7" .. mod.tradeId)
+			end
 			
 			if mod.values and #mod.values > 0 then
 				-- first max control
@@ -443,6 +448,44 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 			end
 
 			nextRow(1)
+			::continue::
+		end
+	end
+
+	local modStatsCounts = modTrade.mods['StatsFilterCounts']
+	if #modStatsCounts > 1 then
+		for index, orGroup in ipairs(modStatsCounts) do
+			if index == 1 then goto continue end -- Skip the first stat, as it is the name of the item
+			drawSectionHeader("ModStats"..index, modStatsCounts[1].display .. " " .. index - 1)		
+			
+			for indexTwo, mod in ipairs(orGroup.values) do
+				local indexName = index .. "_" .. indexTwo
+				controls["modstatscount_check_" .. indexName] = new("CheckBoxControl", anchor, posXGeneral, currentY, 18, formatMaxString(mod.displayName), function(state)			
+					mod.enabled = state
+				end, nil, mod.enabled)
+				controls["modstatscount_value_" .. indexName] = new("LabelControl", {"TOPLEFT", controls["modstatscount_check_" .. indexName], "TOPRIGHT"}, 8, 0, 0, 16, formatMaxString(mod.displayValue), mod.displayValue)
+				controls["modstatscount_value_" .. indexName].tooltipFunc = function(tooltip)
+					tooltip:Clear()
+					tooltip:AddLine(16, mod.displayValue)
+					tooltip:AddSeparator(10)
+					tooltip:AddLine(16, "^8TradeModId: ^7" .. mod.tradeId)
+				end
+				
+				if mod.values and #mod.values > 0 then
+					-- first max control
+					controls["modstatscount_value_max" .. indexName] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, -8, currentY, 80, 20, #mod.values>1 and mod.values[2] or nil, nil, "%D", 3, function(value)
+						mod.values[2] = tonumber(value) or nil
+					end)
+
+					-- then min control
+					controls["modstatscount_value_min" .. indexName] = new("EditControl", { "TOPRIGHT", controls["modstatscount_value_max" .. indexName], "TOPRIGHT" }, -84, 0, 80, 20, mod.values[1], nil, "%D", 3, function(value)
+						mod.values[1] = tonumber(value) or nil
+					end)
+				end
+
+				nextRow(1)
+			end
+
 			::continue::
 		end
 	end

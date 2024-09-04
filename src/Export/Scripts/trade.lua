@@ -14,7 +14,7 @@ local function printScopeInfo(text)
 	print(string.rep("=", 10))
 end
 local function cleanAndFormatString(str)
-	return str:gsub('"', '\\"'):gsub("\n", "\\n"):gsub("%%", "%%%%"):gsub("%(", "%%("):gsub("%)", "%%)"):lower()
+	return str:gsub('"', '\\"'):gsub("\n", "\\n"):gsub("%%", "%%%%"):gsub("%(", "%%("):gsub("%)", "%%)"):gsub('%-', '%%-'):lower()
 end
 
 local function generateFunctionParseWithValues(out, outPrefix, entryText, modTradeId, negate, defaultValue) 
@@ -62,7 +62,7 @@ local function findModItemWithMultipleStats(condFunc, modTrade,out, outPrefix)
 						local statInfo = statsInfo[1]
 
 						-- handling increased word
-						if #statInfo > 1 and statInfo[1].text:match("increased") and #statInfo[2] > 0 then
+						if #statInfo > 1 and (statInfo[1].text:match("increased") or statInfo[1].text:match("more")) and #statInfo[2] > 0 then
 							local increasedStat = statInfo[1]
 							local decreasedStat = statInfo[2]
 							
@@ -143,6 +143,12 @@ launch:DownloadPage(
 							table.insert(entriesToParse, line)
 						end
 					else
+						-- special case forbidden flesh / forbidden flame
+						if entry.text:match ("if you have matching modifier on Forbidden") then
+							local specialCaseForbidden = entry.text:gsub("have matching", "have the matching")
+							table.insert(entriesToParse, specialCaseForbidden)
+						end
+							
 						table.insert(entriesToParse, entry.text)
 					end
 

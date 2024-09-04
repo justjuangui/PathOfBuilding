@@ -56,9 +56,13 @@ return {
 						countStatsFilter.values[1].displayValue = colorCode .. modLine
 						countStatsFilter.values[1].enabled = true
 						modTrade:AddMod(countStatsFilter.values[1])
+					elseif #countStatsFilter.values == 0 then
+						print("No tradeInfo found for line: " .. modLine .. " in enchant")
 					else
 						modTrade:AddMod(countStatsFilter)
 					end
+				else
+					print("No tradeInfo found for line: " .. modLine .. " in enchant")
 				end
 				::nextmod::
 			end

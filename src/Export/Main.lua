@@ -458,7 +458,9 @@ function main:OnFrame()
 					local changeFilter = false
 					changeFilter, self.filter = imgui.InputTextWithHint("##Filter", "Filter:", self.filter or "", imgui.constant.InputTextFlags.EnterReturnsTrue)
 					if changeFilter then
-						wipeTable(self.rowFilter)
+						self.filterErrorlabel = ""
+						self.rowFilter = {}
+
 						local filterFunc
 						local filter = tostring(self.filter)
 						if filter:match("%S") then
@@ -487,12 +489,13 @@ function main:OnFrame()
 							end
 						end
 						:: error_searching ::
+						imgui.SetKeyboardFocusHere(-1) -- focus again the input
 					end
 					if imgui.IsItemHovered() then
 						imgui.PushStyleVar(imgui.constant.StyleVar.PopupBorderSize, 3.0)
 						imgui.BeginTooltip()
 						imgui.TextUnformatted("Takes a Lua expression that returns true or false for a row.")
-							imgui.TextUnformatted("E.g. `Id:match(\"test\")` or for a key column, `Col and Col.Id:match(\"test\")`")
+						imgui.TextUnformatted("E.g. `Id:match(\"test\")` or for a key column, `Col and Col.Id:match(\"test\")`")
 						imgui.EndTooltip()
 						imgui.PopStyleVar()
 					end

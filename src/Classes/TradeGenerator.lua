@@ -350,7 +350,7 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 			controls["name_check_" .. index] = new("CheckBoxControl", anchor, posXGeneral, currentY, 18, formatMaxString(mod.displayName), function(state)			
 				mod.enabled = state
 			end, nil, mod.enabled)
-			controls["name_value_" .. index] = new("LabelControl", {"TOPLEFT", controls["name_check_" .. index], "TOPRIGHT"}, 8, 0, 0, 16, formatMaxString(mod.value))
+			controls["name_value_" .. index] = new("LabelControl", {"TOPLEFT", controls["name_check_" .. index], "TOPRIGHT"}, 8, 0, 0, 16, formatMaxString(mod.displayValue))
 			nextRow(1)
 			::continue::
 		end

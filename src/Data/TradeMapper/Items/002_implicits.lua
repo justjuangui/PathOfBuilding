@@ -23,7 +23,7 @@ return {
 					end
 				end
 
-				local modLine = mod.line
+				local modLine = mod.line:gsub("\n", "")
 				modLine = parseRangeOrCustom(mod, modLine)
 
 				local modTags = parseLineTrade(mod, "implicit")

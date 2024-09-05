@@ -38,7 +38,7 @@ return {
 				end 
 
 				local searchInLocal = false
-				local modLine = mod.line
+				local modLine = mod.line:gsub("\n", "")
 				modLine = parseRangeOrCustom(mod, modLine)
 
 				for  affix, isLocal in pairs(affixesList) do

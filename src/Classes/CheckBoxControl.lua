@@ -26,6 +26,11 @@ function CheckBoxClass:IsMouseOver()
 		x = x - self.labelWidth
 		width = width + self.labelWidth
 	end
+	local extraWidth = self:GetProperty("extraWidth")
+	if extraWidth then
+		width = width + extraWidth
+	end
+
 	return cursorX >= x and cursorY >= y and cursorX < x + width and cursorY < y + height
 end
 

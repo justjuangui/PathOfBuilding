@@ -430,7 +430,8 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 				mod.enabled = state
 			end, nil, mod.enabled)
 			controls["modstats_value_" .. index] = new("LabelControl", {"TOPLEFT", controls["modstats_check_" .. index], "TOPRIGHT"}, 8, 0, 0, 16, formatMaxString(mod.displayValue), mod.displayValue)
-			controls["modstats_value_" .. index].tooltipFunc = function(tooltip)
+			controls["modstats_check_" .. index].extraWidth =  controls["modstats_value_" .. index]:width()
+			controls["modstats_check_" .. index].tooltipFunc = function(tooltip)
 				tooltip:Clear()
 				tooltip:AddLine(16, mod.displayValue)
 				if launch.devModeAlt and IsKeyDown("ALT") then
@@ -469,7 +470,8 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 					end
 				end, nil, firstMod.enabled)
 				controls["modstatscount_value_" .. indexName] = new("LabelControl", {"TOPLEFT", controls["modstatscount_check_" .. indexName], "TOPRIGHT"}, 8, 0, 0, 16, formatMaxString(firstMod.displayValue), firstMod.displayValue)
-				controls["modstatscount_value_" .. indexName].tooltipFunc = function(tooltip)
+				controls["modstatscount_check_" .. indexName].extraWidth =  controls["modstatscount_value_" .. indexName]:width()
+				controls["modstatscount_check_" .. indexName].tooltipFunc = function(tooltip)
 					tooltip:Clear()
 					tooltip:AddLine(16, firstMod.displayValue)
 					if launch.devModeAlt and IsKeyDown("ALT") then

@@ -6,7 +6,7 @@ return {
 
 			local variantKeys = {"variant", "variantAlt", "variantAlt2", "variantAlt3", "variantAlt4", "variantAlt5"}
 			for _, mod in ipairs(item.implicitModLines) do
-				local colorCode = (mod.crafted and colorCodes.CRAFTED) or (mod.scourge and colorCodes.SCOURGE) or (mod.custom and colorCodes.CUSTOM) or (mod.fractured and colorCodes.FRACTURED) or (mod.crucible and colorCodes.CRUCIBLE) or colorCodes.MAGIC
+				local colorCode = (mod.exarch and colorCodes.CLEANSING) or (mod.eater and colorCodes.TANGLE) or (item.corrupted and colorCodes.NEGATIVE) or colorCodes.MAGIC
 				local displayName = colorCode .. "Implicits"
 				if mod.variantList then
 					local variantFound  = false

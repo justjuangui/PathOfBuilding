@@ -309,14 +309,10 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 	local controls = {}
 
 	-- TODO: Enabled scroll if height is lower than the screen
-	local screenW, screenH = GetScreenSize()
 	local currentY = 0
-	local popupWidth = 600
-	local maxLen = 82
-	if  type ~= "gems" and screenW > popupWidth then
-		popupWidth =  math.max((screenW /2)  + (popupWidth / 2), popupWidth)
-		maxLen = (50 * popupWidth) / 600
-	end
+	local popupWidth = type == "gems" and 500 or 800
+	local maxLen = (66 * popupWidth) / 600
+
 	local pxPerLine = 26
 	local posXGeneral = 8 + 82
 	local anchor = {"TOPLEFT", nil, "TOPLEFT"}

@@ -889,7 +889,7 @@ function SkillsTabClass:CreateGemSlot(index)
 	self.controls["gemSlot"..index.."Enable"] = slot.enabled
 
 	-- trade button
-	slot.trade = new("ButtonControl", {"LEFT",slot.enabled,"RIGHT"}, 18, 0, 60, 20, "Trade", function()
+	slot.trade = new("ButtonControl", {"LEFT",slot.enabled,"RIGHT"}, {18, 0, 60, 20}, "Trade", function()
 		local gemInstance = self.displayGroup.gemList[index]
 		if gemInstance then
 			if IsKeyDown("CTRL") then

@@ -301,7 +301,7 @@ holding Shift will put it in the second.]])
 		self:SetDisplayItem()
 	end)
 
-	self.controls.openTradeSearch = new("ButtonControl", {"LEFT",self.controls.removeDisplayItem,"RIGHT"}, 8, 0, 140, 20, "Open Trade Link", function()
+	self.controls.openTradeSearch = new("ButtonControl", {"LEFT",self.controls.removeDisplayItem,"RIGHT"}, {8, 0, 140, 20}, "Open Trade Link", function()
 		if self.displayItem then
 			if IsKeyDown("CTRL") then
 				self.tradeGenerator:GenerateExactMatchTradeLink(self.displayItem, nil, "items")

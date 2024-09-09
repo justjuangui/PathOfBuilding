@@ -329,9 +329,9 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 	end
 	local function drawSectionHeader(id, title)
 		local headerBGColor ={ .6, .6, .6}
-		controls["section-"..id .. "-bg"] = new("RectangleOutlineControl", { "TOPLEFT", nil, "TOPLEFT" }, 8, currentY, popupWidth - 17, 26, headerBGColor, 1)
+		controls["section-"..id .. "-bg"] = new("RectangleOutlineControl", { "TOPLEFT", nil, "TOPLEFT" }, {8, currentY, popupWidth - 17, 26}, headerBGColor, 1)
 		nextRow(.2)
-		controls["section-"..id .. "-label"] = new("LabelControl", { "TOPLEFT", nil, "TOPLEFT" }, popupWidth / 2 - 60, currentY, 0, 16, "^7" .. title)
+		controls["section-"..id .. "-label"] = new("LabelControl", { "TOPLEFT", nil, "TOPLEFT" }, {popupWidth / 2 - 60, currentY, 0, 16}, "^7" .. title)
 		nextRow(1)
 	end
 
@@ -343,10 +343,10 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 		for index, mod in ipairs(modName) do
 			if index == 1 then goto continue end -- Skip the first name, as it is the name of the item
 			
-			controls["name_check_" .. index] = new("CheckBoxControl", anchor, posXGeneral, currentY, 18, formatMaxString(mod.displayName), function(state)			
+			controls["name_check_" .. index] = new("CheckBoxControl", anchor, {posXGeneral, currentY, 18}, formatMaxString(mod.displayName), function(state)			
 				mod.enabled = state
 			end, nil, mod.enabled)
-			controls["name_value_" .. index] = new("LabelControl", {"TOPLEFT", controls["name_check_" .. index], "TOPRIGHT"}, 8, 0, 0, 16, formatMaxString(mod.displayValue))
+			controls["name_value_" .. index] = new("LabelControl", {"TOPLEFT", controls["name_check_" .. index], "TOPRIGHT"}, {8, 0, 0, 16}, formatMaxString(mod.displayValue))
 			nextRow(1)
 			::continue::
 		end
@@ -358,18 +358,18 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 		for index, mod in ipairs(modMisc) do
 			if index == 1 then goto continue end -- Skip the first name, as it is the name of the item
 			
-			controls["modmisc_check_" .. index] = new("CheckBoxControl", anchor, posXGeneral, currentY, 18, formatMaxString(mod.displayName), function(state)			
+			controls["modmisc_check_" .. index] = new("CheckBoxControl", anchor, {posXGeneral, currentY, 18}, formatMaxString(mod.displayName), function(state)			
 				mod.enabled = state
 			end, nil, mod.enabled)
 			
 			if mod.type == "quality" or mod.type == "gem_level" then
 				-- first max control
-				controls["modmisc_value_max" .. index] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, -8, currentY, 80, 20, mod.value.max or nil, nil, "%D", 3, function(value)
+				controls["modmisc_value_max" .. index] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, {-8, currentY, 80, 20}, mod.value.max or nil, nil, "%D", 3, function(value)
 					mod.value.max = tonumber(value) or nil
 				end)
 
 				-- then min control
-				controls["modmisc_value_min" .. index] = new("EditControl", { "TOPRIGHT", controls["modmisc_value_max" .. index], "TOPRIGHT" }, -84, 0, 80, 20, mod.value.min, nil, "%D", 3, function(value)
+				controls["modmisc_value_min" .. index] = new("EditControl", { "TOPRIGHT", controls["modmisc_value_max" .. index], "TOPRIGHT" }, {-84, 0, 80, 20}, mod.value.min, nil, "%D", 3, function(value)
 					mod.value.min = tonumber(value) or nil
 				end)
 			end
@@ -384,33 +384,33 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 		for index, mod in ipairs(modSocket) do
 			if index == 1 then goto continue end -- Skip the first name, as it is the name of the item
 			
-			controls["modsocket_check_" .. index] = new("CheckBoxControl", anchor, posXGeneral, currentY, 18, formatMaxString(mod.displayName), function(state)			
+			controls["modsocket_check_" .. index] = new("CheckBoxControl", anchor, {posXGeneral, currentY, 18}, formatMaxString(mod.displayName), function(state)			
 				mod.enabled = state
 			end, nil, mod.enabled)
 
 			if mod.type == "links" then
 				-- first max control
-				controls["modsocket_value_max" .. index] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, -8, currentY, 80, 20, mod.value.max or nil, nil, "%D", 3, function(value)
+				controls["modsocket_value_max" .. index] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, {-8, currentY, 80, 20}, mod.value.max or nil, nil, "%D", 3, function(value)
 					mod.value.max = tonumber(value) or nil
 				end)
 
 				-- then min control
-				controls["modsocket_value_min" .. index] = new("EditControl", { "TOPRIGHT", controls["modsocket_value_max" .. index], "TOPRIGHT" }, -84, 0, 80, 20, mod.value.min, nil, "%D", 3, function(value)
+				controls["modsocket_value_min" .. index] = new("EditControl", { "TOPRIGHT", controls["modsocket_value_max" .. index], "TOPRIGHT" }, {-84, 0, 80, 20}, mod.value.min, nil, "%D", 3, function(value)
 					mod.value.min = tonumber(value) or nil
 				end)
 			elseif mod.type == "sockets" then
 				-- first B control
-				controls["modsocket_value_b" .. index] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, -8, currentY, 80, 20, mod.value.b or nil, "B", "%D", 3, function(value)
+				controls["modsocket_value_b" .. index] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, {-8, currentY, 80, 20}, mod.value.b or nil, "B", "%D", 3, function(value)
 					mod.value.b = tonumber(value) or nil
 				end)
 
 				-- then G control
-				controls["modsocket_value_g" .. index] = new("EditControl", { "TOPRIGHT", controls["modsocket_value_b" .. index], "TOPRIGHT" }, -84, 0, 80, 20, mod.value.g or nil, "G", "%D", 3, function(value)
+				controls["modsocket_value_g" .. index] = new("EditControl", { "TOPRIGHT", controls["modsocket_value_b" .. index], "TOPRIGHT" }, {-84, 0, 80, 20}, mod.value.g or nil, "G", "%D", 3, function(value)
 					mod.value.g = tonumber(value) or nil
 				end)
 
 				-- then R control
-				controls["modsocket_value_r" .. index] = new("EditControl", { "TOPRIGHT", controls["modsocket_value_g" .. index], "TOPRIGHT" }, -84, 0, 80, 20, mod.value.r or nil, "R", "%D", 3, function(value)
+				controls["modsocket_value_r" .. index] = new("EditControl", { "TOPRIGHT", controls["modsocket_value_g" .. index], "TOPRIGHT" }, {-84, 0, 80, 20}, mod.value.r or nil, "R", "%D", 3, function(value)
 					mod.value.r = tonumber(value) or nil
 				end)
 			end
@@ -426,10 +426,10 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 		for index, mod in ipairs(modStats) do
 			if index == 1 then goto continue end -- Skip the first name, as it is the name of the item
 			
-			controls["modstats_check_" .. index] = new("CheckBoxControl", anchor, posXGeneral, currentY, 18, formatMaxString(mod.displayName), function(state)			
+			controls["modstats_check_" .. index] = new("CheckBoxControl", anchor, {posXGeneral, currentY, 18}, formatMaxString(mod.displayName), function(state)			
 				mod.enabled = state
 			end, nil, mod.enabled)
-			controls["modstats_value_" .. index] = new("LabelControl", {"TOPLEFT", controls["modstats_check_" .. index], "TOPRIGHT"}, 8, 0, 0, 16, formatMaxString(mod.displayValue), mod.displayValue)
+			controls["modstats_value_" .. index] = new("LabelControl", {"TOPLEFT", controls["modstats_check_" .. index], "TOPRIGHT"}, {8, 0, 0, 16}, formatMaxString(mod.displayValue), mod.displayValue)
 			controls["modstats_check_" .. index].extraWidth =  controls["modstats_value_" .. index]:width()
 			controls["modstats_check_" .. index].tooltipFunc = function(tooltip)
 				tooltip:Clear()
@@ -442,12 +442,12 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 			
 			if not mod.option and mod.values and #mod.values > 0 then
 				-- first max control
-				controls["modstats_value_max" .. index] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, -8, currentY, 80, 20, #mod.values>1 and mod.values[2] or nil, nil, "%D", 3, function(value)
+				controls["modstats_value_max" .. index] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, {-8, currentY, 80, 20}, #mod.values>1 and mod.values[2] or nil, nil, "%D", 3, function(value)
 					mod.values[2] = tonumber(value) or nil
 				end)
 
 				-- then min control
-				controls["modstats_value_min" .. index] = new("EditControl", { "TOPRIGHT", controls["modstats_value_max" .. index], "TOPRIGHT" }, -84, 0, 80, 20, mod.values[1], nil, "%D", 3, function(value)
+				controls["modstats_value_min" .. index] = new("EditControl", { "TOPRIGHT", controls["modstats_value_max" .. index], "TOPRIGHT" }, {-84, 0, 80, 20}, mod.values[1], nil, "%D", 3, function(value)
 					mod.values[1] = tonumber(value) or nil
 				end)
 			end
@@ -464,12 +464,12 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 			if #orGroup.values > 0 then
 				local firstMod = orGroup.values[1]
 				local indexName = index .. "_"
-				controls["modstatscount_check_" .. indexName] = new("CheckBoxControl", anchor, posXGeneral, currentY, 18, formatMaxString(firstMod.displayName), function(state)			
+				controls["modstatscount_check_" .. indexName] = new("CheckBoxControl", anchor, {posXGeneral, currentY, 18}, formatMaxString(firstMod.displayName), function(state)			
 					for _, mod in ipairs(orGroup.values) do
 						mod.enabled = state
 					end
 				end, nil, firstMod.enabled)
-				controls["modstatscount_value_" .. indexName] = new("LabelControl", {"TOPLEFT", controls["modstatscount_check_" .. indexName], "TOPRIGHT"}, 8, 0, 0, 16, formatMaxString(firstMod.displayValue), firstMod.displayValue)
+				controls["modstatscount_value_" .. indexName] = new("LabelControl", {"TOPLEFT", controls["modstatscount_check_" .. indexName], "TOPRIGHT"}, {8, 0, 0, 16}, formatMaxString(firstMod.displayValue), firstMod.displayValue)
 				controls["modstatscount_check_" .. indexName].extraWidth =  controls["modstatscount_value_" .. indexName]:width()
 				controls["modstatscount_check_" .. indexName].tooltipFunc = function(tooltip)
 					tooltip:Clear()
@@ -484,14 +484,14 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 				
 				if not firstMod.option and firstMod.values and #firstMod.values > 0 then
 					-- first max control
-					controls["modstatscount_value_max" .. indexName] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, -8, currentY, 80, 20, #firstMod.values>1 and firstMod.values[2] or nil, nil, "%D", 3, function(value)
+					controls["modstatscount_value_max" .. indexName] = new("EditControl", { "TOPRIGHT", nil , "TOPRIGHT" }, {-8, currentY, 80, 20}, #firstMod.values>1 and firstMod.values[2] or nil, nil, "%D", 3, function(value)
 						for _, mod in ipairs(orGroup.values) do
 							mod.values[2] = tonumber(value) or nil
 						end
 					end)
 
 					-- then min control
-					controls["modstatscount_value_min" .. indexName] = new("EditControl", { "TOPRIGHT", controls["modstatscount_value_max" .. indexName], "TOPRIGHT" }, -84, 0, 80, 20, firstMod.values[1], nil, "%D", 3, function(value)
+					controls["modstatscount_value_min" .. indexName] = new("EditControl", { "TOPRIGHT", controls["modstatscount_value_max" .. indexName], "TOPRIGHT" }, {-84, 0, 80, 20}, firstMod.values[1], nil, "%D", 3, function(value)
 						for _, mod in ipairs(orGroup.values) do
 							mod.values[1] = tonumber(value) or nil
 						end
@@ -506,12 +506,12 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 	end
 
 	nextRow(0.5)
-	controls.generate = new("ButtonControl", {"TOPLEFT", nil, "TOPLEFT"} , (popupWidth / 2) - 120 - (6/2),currentY, 120, 20, "Open Trade Link", function()
+	controls.generate = new("ButtonControl", {"TOPLEFT", nil, "TOPLEFT"} , {(popupWidth / 2) - 120 - (6/2),currentY, 120, 20}, "Open Trade Link", function()
 		self:OpenInBrowserModTrades(modTrade)
 		main:ClosePopup()
 	end)
 	
-	controls.close = new("ButtonControl", {"TOPLEFT", controls.generate, "TOPRIGHT"}, 6, 0, 120, 20, "Cancel", function()
+	controls.close = new("ButtonControl", {"TOPLEFT", controls.generate, "TOPRIGHT"}, {6, 0, 120, 20}, "Cancel", function()
 		main:ClosePopup()
 	end)
 	

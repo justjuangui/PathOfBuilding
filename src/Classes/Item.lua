@@ -298,7 +298,11 @@ function ItemClass:ParseRaw(raw, rarity, highQuality)
 	self.rawLines = { }
 	-- Find non-blank lines and trim whitespace
 	for line in raw:gmatch("%s*([^\n]*%S)") do
-	 	t_insert(self.rawLines, line)
+		if line:match("^{ ") then
+			main:OpenMessagePopup("Error", "\"Advanced Item Description\" (Ctrl+Alt+c) is currently unsupported.\nPlease try again using Ctrl+c only.")
+			return
+		end
+		t_insert(self.rawLines, line)
 	end
 	local mode = rarity and "GAME" or "WIKI"
 	local l = 1
@@ -943,6 +947,12 @@ function ItemClass:GetModSpawnWeight(mod, includeTags, excludeTags)
 		for i, key in ipairs(mod.weightKey) do
 			if (self.base.tags[key] or (includeTags and includeTags[key]) or HasInfluenceTag(key)) and not (excludeTags and excludeTags[key]) then
 				weight = (HasInfluenceTag(key) and HasMavenInfluence(mod.affix)) and 1000 or mod.weightVal[i]
+				break
+			end
+		end
+		for i, key in ipairs(mod.weightMultiplierKey or {}) do
+			if (self.base.tags[key] or (includeTags and includeTags[key]) or HasInfluenceTag(key)) and not (excludeTags and excludeTags[key]) then
+				weight = weight * mod.weightMultiplierVal[i] / 100
 				break
 			end
 		end

@@ -191,7 +191,8 @@ function buildMode:Init(dbFileName, buildName, buildXML, convertBuild, importLin
 					mult = ((playerLevel + 5) / (playerLevel + 5 + diff ^ 2.5)) ^ 1.5
 				end
 				if playerLevel >= 95 then
-					mult = mult * (1 / (1 + 0.1 * (playerLevel - 94)))
+					local xpPenalty = ({0.935, 0.885, 0.813, 0.7175, 0.6})[playerLevel - 94] or 0
+					mult = mult * (1 / (1 + 0.1 * (playerLevel - 94))) * xpPenalty
 				end
 				if mult > 0.01 then
 					local line = level
@@ -1862,7 +1863,7 @@ function buildMode:CompareStatList(tooltip, statList, actor, baseOutput, compare
 			local statVal1 = compareOutput[statData.stat] or 0
 			local statVal2 = baseOutput[statData.stat] or 0
 			local diff = statVal1 - statVal2
-			if statData.stat == "FullDPS" and not GlobalCache.useFullDPS and self.viewMode ~= "TREE" then
+			if statData.stat == "FullDPS" and not compareOutput[statData.stat] then
 				diff = 0
 			end
 			if (diff > 0.001 or diff < -0.001) and (not statData.condFunc or statData.condFunc(statVal1,compareOutput) or statData.condFunc(statVal2,baseOutput)) then

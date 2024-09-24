@@ -117,7 +117,7 @@ function BaseMapperClass:Execute(objRef, excludeRuleList)
 	local modsTrade = self:GenerateModTradeBasic()
 	for _, rule in ipairs(self.rules) do
 		if not excludeRuleList or not excludeRuleList[rule.id] then
-			local errMsg = PCall(rule.run, objRef, modsTrade, parseLineTrade, parseRangeOrCustom)
+			local errMsg = PCall(rule.run, objRef, modsTrade, parseLineTrade, parseRangeOrCustom, data.tradeInfo.ItemFilter)
 
 			if errMsg then
 				print("Error executing rule: "..errMsg)
@@ -188,8 +188,27 @@ function TradeGeneratorClass:OpenInBrowserModTrades(modTrade)
 		end
 	end
 
-	local modMisc = modTrade.mods['MiscFilter']
+	local modTypeFilter = modTrade.mods['TypeFilter']
+	if #modTypeFilter > 1 then
+		if not search.query.filters then
+			search.query.filters = {}
+		end
+		if not search.query.filters.type_filters then
+			search.query.filters.type_filters = {}
+		end
+		if not search.query.filters.type_filters.filters then
+			search.query.filters.type_filters.filters = {}
+		end
 
+		for index, mod in ipairs(modTypeFilter) do
+			if index == 1 or not mod.enabled then goto continue end -- Skip the first name, as it is the name of the item
+
+			search.query.filters.type_filters.filters[mod.type] = mod.value
+			::continue::
+		end
+	end
+
+	local modMisc = modTrade.mods['MiscFilter']
 	if #modMisc > 1 then
 		if not search.query.filters then
 			search.query.filters = {}
@@ -347,6 +366,21 @@ function TradeGeneratorClass:GeneratePopupItemSettings(objectToMap, excludeRuleL
 				mod.enabled = state
 			end, nil, mod.enabled)
 			controls["name_value_" .. index] = new("LabelControl", {"TOPLEFT", controls["name_check_" .. index], "TOPRIGHT"}, {8, 0, 0, 16}, formatMaxString(mod.displayValue))
+			nextRow(1)
+			::continue::
+		end
+	end
+
+	local modTypeFilter = modTrade.mods['TypeFilter']
+	if #modTypeFilter > 1 then
+		drawSectionHeader("TypeFilter", modTypeFilter[1].display)
+		for index, mod in ipairs(modTypeFilter) do
+			if index == 1 then goto continue end -- Skip the first name, as it is the name of the item
+			
+			controls["type_check_" .. index] = new("CheckBoxControl", anchor, {posXGeneral, currentY, 18}, formatMaxString(mod.displayName), function(state)			
+				mod.enabled = state
+			end, nil, mod.enabled)
+			controls["type_value_" .. index] = new("LabelControl", {"TOPLEFT", controls["type_check_" .. index], "TOPRIGHT"}, {8, 0, 0, 16}, formatMaxString(mod.displayValue))
 			nextRow(1)
 			::continue::
 		end

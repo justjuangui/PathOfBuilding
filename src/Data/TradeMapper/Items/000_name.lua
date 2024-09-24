@@ -7,7 +7,8 @@ return {
 			modTrade:AddMod({name="NameFilter", type="type", value=item.baseName, displayName= "Base", displayValue= color .. item.baseName, enabled=true})
 		end	
 		if item.rarity == 'UNIQUE' and item.title then
-			modTrade:AddMod({name="NameFilter", type="name", value=item.title, displayName=  "Name", displayValue= color.. item.title, enabled=true})
+			local title = item.title:gsub("%s%b[]", "")
+			modTrade:AddMod({name="NameFilter", type="name", value=title, displayName=  "Name", displayValue= color.. title, enabled=true})
 		end
 	end
 }

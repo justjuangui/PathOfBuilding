@@ -1106,5 +1106,6 @@ LoadModule("Data/Uniques/Special/Generated")
 LoadModule("Data/Uniques/Special/New")
 
 data.tradeInfo = {
-	Stats = LoadModule("Data/TradeStatsParser")
+	Stats = LoadModule("Data/TradeStatsParser"),
+	ItemFilter = LoadModule("Data/TradeItemCategoryParser")
 } 

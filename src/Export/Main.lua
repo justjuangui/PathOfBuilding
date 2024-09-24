@@ -442,6 +442,7 @@ function main:OnFrame()
 						for i, specCol in ipairs(self.curDatFile.spec) do
 							local isSelected = self.curSpecColIndex == i
 							local name = specCol.name ~= "" and specCol.name or "???"
+							imgui.PushID(i)
 							if imgui.Selectable(name, isSelected) then
 								self:SetCurrentCol(i)
 							end
@@ -449,11 +450,44 @@ function main:OnFrame()
 							if isSelected then
 								imgui.SetItemDefaultFocus()
 							end
+							imgui.PopID()
 						end
 						imgui.EndListBox()
 					end
 					
+					imgui.SameLine()
+
+					imgui.BeginChild("##SpecColEditChild", -imgui.constant.FLT_MIN, spaceAvaily * 0.40)
+					
+					imgui.TextUnformatted("Name:")
+
+					local nameChange = false
+					nameChange, self.currentColName = imgui.InputText("##SpecColName", self.currentColName or "", -imgui.constant.FLT_MIN)
+
+					imgui.Spacing()
+					imgui.TextUnformatted("Type:")
+					if imgui.BeginCombo("##SpecColType", self.currentColType) then
+						for _, type in ipairs(self.typeDrop) do
+							local isSelected = self.curSpecCol.type == type
+							if imgui.Selectable(type, isSelected) then
+								self.currentColType = type
+							end
+							if isSelected then
+								imgui.SetItemDefaultFocus()
+							end
+						end
+						imgui.EndCombo()
+					end
+
+					imgui.Spacing()
+
+					self.currentColIsList = imgui.Checkbox("List", self.currentColIsList)
+
 					imgui.EndChild()
+					
+					imgui.EndChild()
+
+					
 				else
 					local changeFilter = false
 					changeFilter, self.filter = imgui.InputTextWithHint("##Filter", "Filter:", self.filter or "", imgui.constant.InputTextFlags.EnterReturnsTrue)
@@ -708,6 +742,10 @@ function main:SetCurrentCol(index)
 end
 
 function main:UpdateCol()
+	self.currentColName = self.curSpecCol.name
+	self.currentColType = self.curSpecCol.type
+	self.currentColIsList = self.curSpecCol.list
+
 	self.controls.colName:SetText(self.curSpecCol.name)
 	self.controls.colType:SelByValue(self.curSpecCol.type)
 	self.controls.colIsList.state = self.curSpecCol.list
